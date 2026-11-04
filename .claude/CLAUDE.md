@@ -1,149 +1,100 @@
-# Project Instructions — Drupal 10
+# CLAUDE.md
 
-## 1. Project Overview
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- **Framework**: Drupal 10.x on a LAMP stack (Linux, Apache, MySQL/MariaDB, PHP)
-- **PHP Version**: 8.3
-- **Goal**: Adhere strictly to Drupal best practices; maintain clean, modular, and testable code
+## Project Overview
 
-### Key Principles
+**Vitasana** — a Drupal 10.5 website (PHP 8.4) using Composer-managed dependencies. The Drupal webroot is `public/`, not the repo root.
 
-- **DRY**: Reuse code through hooks, plugins, and services
-- **SOLID**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
-- **Security First**: Sanitize input, escape output, check permissions
-- **Testability**: Write code that's easy to test with PHPUnit
-- **Drupal Standards**: Follow official [Drupal Coding Standards](https://www.drupal.org/docs/develop/standards)
+- **Local dev**: Both DDEV and Lando configs exist. DDEV is configured as `drupal10` type with nginx-fpm and MariaDB 11.8.
+- **Base theme**: `cruftless` (from `matone/cruftless` package)
+- **Content architecture**: Paragraphs-based with Layout Paragraphs for flexible page building
+- **Frontend**: Alpine.js for interactivity, Vite for SCSS compilation, BEM CSS naming
+- **CI/CD**: GitLab CI (`.gitlab-ci.yml`) — builds container images and deploys via Kustomize manifests
 
----
+## Development Commands
 
-## 2. Coding Standards & Style
+### DDEV (primary local environment)
+```bash
+ddev start                          # Start containers
+ddev drush cr                       # Clear Drupal cache
+ddev drush cim -y                   # Import config
+ddev drush cex -y                   # Export config
+ddev drush updb -y                  # Run database updates
+ddev composer install                # Install PHP dependencies
+ddev composer require drupal/foo     # Add a module
+```
 
-- Strictly follow [Drupal Coding Standards](https://www.drupal.org/docs/develop/standards)
+### Lando (alternative)
+```bash
+lando start
+lando drush cr
+lando npm-install                   # npm ci in theme dir
+lando vite-watch                    # Vite watch mode (npm run dev:vite)
+lando vite-compile                  # Vite production build (npm run build:vite)
+```
+
+### Theme build (SCSS → CSS via Vite)
+```bash
+# From public/themes/vitasana/
+npm ci                              # Install node dependencies
+npm run build                       # Production build (vite build)
+npm run dev:vite                    # Watch mode (vite build --watch)
+```
+Vite discovers all `scss/*.scss` entry files and outputs to `css/`. Config: `public/themes/vitasana/vite.config.js`.
+
+### Testing
+```bash
+ddev exec vendor/bin/phpunit -c phpunit.xml.dist                    # Run all tests
+ddev exec vendor/bin/phpunit -c phpunit.xml.dist --filter=TestName  # Run single test
+```
+
+### Linting (if phpcs available)
+```bash
+ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice public/modules/vitasana/
+ddev exec vendor/bin/phpcbf --standard=Drupal,DrupalPractice public/modules/vitasana/  # Auto-fix
+```
+
+## Architecture
+
+### Directory layout
+- `public/` — Drupal webroot
+- `public/modules/vitasana/` — Custom modules (4 modules: `general`, `language_switcher`, `vitasana_config_ignore`, `vs_layout_builder`)
+- `public/themes/vitasana/` — Custom theme (extends `cruftless` base theme)
+- `public/themes/vitasana/templates/` — Twig templates organized as: `base/`, `components/`, `paragraphs/`, `layouts/`, `field/`, `navigation/`, `pages/`, `form/`, `includes/`
+- `public/themes/vitasana/scss/` — SCSS source files (compiled by Vite to `css/`)
+- `config/sync/` — Drupal config export directory
+- `helpers/functions.php` — Autoloaded helper functions
+- `patches/` — Local patches applied via composer-patches
+
+### Custom modules
+- **general** — General site functionality and hooks
+- **language_switcher** — Custom language switcher block plugin
+- **vitasana_config_ignore** — Config filter plugin for ignoring specific config on import
+- **vs_layout_builder** — Custom Layout Paragraphs layouts with background options
+
+### Theme architecture
+- Base theme `cruftless` provides the foundation; `vitasana` overrides and extends it
+- Layout Paragraphs drives page structure with custom layouts (one/two/three/four column) defined in `vitasana.layouts.yml`
+- `vitasana.theme` contains preprocess functions that set paragraph view modes based on layout context
+- Component Twig templates (`templates/components/`) are reused by paragraph templates (`templates/paragraphs/`)
+- JS uses Drupal Behaviors pattern with `once()`, plus Alpine.js for modals/interactive elements
+- Libraries defined in `vitasana.libraries.yml`: `global-styling`, `polyfills`, `language-switch`, `faq`, `alpine`
+
+## Coding Standards
+
 - Every PHP file **must** start with `declare(strict_types=1);`
-- Use typed properties and return types for all class methods and functions
-- Adhere to the rules defined in the project's `phpcs.xml` file
-- All classes, methods, and functions must have comprehensive PHPDoc blocks (`@param`, `@return`, `@throws`)
+- Use typed properties and return types everywhere
+- All classes, methods, and functions need PHPDoc blocks
+- Always use dependency injection — never `\Drupal::service()` in classes
+- Follow Drupal Coding Standards (see `@.claude/instructions/php.md`, `@.claude/instructions/drupal.md`)
+- Twig: logic-free templates, use preprocess functions (see `@.claude/instructions/twig.md`)
+- JS: Drupal Behaviors with `once()`, scoped to component (see `@.claude/instructions/js.md`)
 
-See `@.claude/instructions/php.md` for full PHP coding standards.
+## Git Conventions
 
----
+See `@.claude/instructions/git.md` for full rules.
 
-## 3. Architecture & Backend
-
-- **Dependency Injection**: Always use DI to get services in classes. Never use `\Drupal::service()` or other static accessors in classes.
-- **Services**: Define all services in the module's `.services.yml`. Keep services small — Single Responsibility Principle.
-- **Controllers**: Lightweight. Handle request, call services, return response. No business logic.
-- **Drupal APIs**: Always prefer core APIs (Form API, Entity API, Database API) over custom implementations. Use `@database` service via DI, not `\Drupal::database()`.
-
-See `@.claude/instructions/drupal.md` for comprehensive Drupal development rules.
-
----
-
-## 4. Frontend Development
-
-- **Twig**: Keep templates logic-free; use preprocess functions to prepare variables. Attach assets with `{{ attach_library('module/library') }}`.
-- **JavaScript**: Write JS using Drupal Behaviors with `once()`. Scope to component. Use Drupal AJAX API.
-- **CSS**: Use BEM naming, component-based approach. Define all assets in `.libraries.yml`.
-
-See `@.claude/instructions/twig.md` for Twig rules and `@.claude/instructions/js.md` for JavaScript rules.
-
----
-
-## 5. Testing
-
-- **Framework**: PHPUnit for unit and kernel tests
-- **Location**: `tests/src/Unit/` and `tests/src/Kernel/` in each module
-- **Coverage**: Aim for 80%+ on custom services and business logic. New features must include tests.
-
----
-
-## 6. Security
-
-- Sanitize all user input
-- Use Twig auto-escaping or Drupal's render API to prevent XSS
-- Check permissions via routing (`_permission`) or `$currentUser->hasPermission()`
-- Use prepared statements for all database queries
-
----
-
-## 7. Git & Commit Message Rules
-
-See `@.claude/instructions/git.md` for full Git workflow rules.
-
-### Branch Naming
-
-```
-<type>/<ticket-number>-<description>
-```
-
-Examples: `feature/329-search-styling`, `bugfix/456-fix-header`, `hotfix/critical-patch`
-
-### Commit Message Format
-
-```
-#<TICKET_NUMBER>: <Description>.
-```
-
-**Rules:**
-- Start with ticket number from branch name (e.g., `#329`)
-- Use colon + space after number
-- Capitalize first letter of description
-- End with period
-- Max 72 characters
-- Use present tense imperative: "Add", "Fix", "Update", "Remove"
-- One logical change per commit
-
-**Examples:**
-```
-#329: Update search feature styling.
-#445: Add user profile page.
-#456: Fix header mobile display.
-```
-
----
-
-## 8. Module Structure Reference
-
-```
-my_module/
-├── src/
-│   ├── Controller/
-│   ├── Service/
-│   ├── Form/
-│   ├── Plugin/
-│   │   ├── Block/
-│   │   ├── Field/
-│   │   └── views/
-│   ├── Entity/
-│   └── Event/
-├── templates/
-├── css/
-├── js/
-├── tests/
-│   └── src/
-│       ├── Unit/
-│       └── Kernel/
-├── my_module.info.yml
-├── my_module.services.yml
-├── my_module.routing.yml
-├── my_module.permissions.yml
-├── my_module.links.menu.yml
-└── my_module.libraries.yml
-```
-
----
-
-## 9. Quick Checklist
-
-- [ ] `declare(strict_types=1);` in all PHP files
-- [ ] All classes, methods, properties have type declarations
-- [ ] All public/protected methods have PHPDoc blocks
-- [ ] Dependency injection used throughout (no `\Drupal::` in classes)
-- [ ] Business logic in services, not controllers
-- [ ] Database queries use prepared statements
-- [ ] Input validated and sanitized
-- [ ] Output escaped (auto-escaped in Twig)
-- [ ] User permissions checked for sensitive operations
-- [ ] Tests written for new business logic
-- [ ] Commit messages follow `#<TICKET>: <Description>.` format
-
+- **Branch naming**: `<type>/<ticket-number>-<description>` (e.g., `feature/329-search-styling`)
+- **Commit format**: `#<TICKET>: <Description>.` — present tense imperative, max 72 chars, ends with period
+- Extract ticket number from branch name (e.g., branch `feature/329-foo` → commit `#329: Add foo.`)
