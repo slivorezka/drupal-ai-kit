@@ -8,12 +8,14 @@ every assistant on the team writes Drupal code the same way.
 
 AI assistants produce much better Drupal code when they know the project's conventions: where code lives, how services
 are wired, how commits are named. Writing those rules separately for every tool leads to drift. This kit keeps one
-shared source of truth and thin tool-specific layers on top of it.
+shared source of truth; the settings of a tool are generated from it on the machine of the developer who uses that
+tool.
 
 ## Features
 
-- **One set of rules for all tools** — `AGENTS.md` and `.agents/` are read by Codex, Claude Code and Copilot;
-  `.github/` only maps file types and prompts to them.
+- **One set of rules for all tools** — everything lives once in `AGENTS.md` and `.ai-kit/`.
+- **Install only your tool** — `.ai-kit/install.sh claude` (or `codex`, `copilot`) generates the settings that tool
+  reads. The repository carries no `.claude/`, `.codex/` or Copilot files.
 - **Drupal-focused standards** — Drupal Coding Standards, PHP 8.3+ with strict types, dependency injection,
   logic-free Twig, Drupal Behaviors JS and a consistent Git workflow.
 - **Reusable skills** — scaffold services and plugins, review performance, refactor to DI, write commit messages.
@@ -57,23 +59,31 @@ shared source of truth and thin tool-specific layers on top of it.
 ## Repository Layout
 
 ```
-AGENTS.md            # Shared project rules (Codex, Claude Code, Copilot)
-.agents/
+AGENTS.md            # Shared project rules, read in place by every tool
+.ai-kit/
 ├── instructions/    # Topic guides: drupal, php, twig, js, git
-├── skills/          # Skills — source of truth
-└── sync.sh          # Regenerates the tool-specific copies
-.claude/             # Claude Code: CLAUDE.md, settings, subagents (source), skills (copy)
-.codex/              # Codex: config.toml, subagents (generated)
-.github/             # Copilot: pointers to AGENTS.md, the guides and the skills
+├── skills/          # Skills
+├── agents/          # Subagents
+├── tools/           # Files only one tool needs
+│   ├── claude/      #   -> .claude/   CLAUDE.md, settings.json
+│   ├── codex/       #   -> .codex/    config.toml
+│   └── copilot/     #   -> .github/   pointers to AGENTS.md, the guides and the skills
+└── install.sh       # Generates the settings of a tool from everything above
 ```
+
+`.claude/`, `.codex/`, `.agents/skills/` and the Copilot files in `.github/` are not in the repository.
+`.ai-kit/install.sh` creates them on your machine, and `.gitignore` keeps them out of Git.
+
+The kit lives in `.ai-kit/` and not in `.agents/`, so a project's own `.agents/` folder stays the project's. The
+only thing installed there is the kit's skills, because Codex reads skills from `.agents/skills/` and nowhere else.
 
 ## Supported Tools
 
-| Tool           | Entry point                                    | Docs                                                                                                                        |
-|----------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| Claude Code    | `.claude/CLAUDE.md`                            | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                               |
-| Codex          | `AGENTS.md`, `.codex/config.toml`              | [AGENTS.md](https://agents.md/)                                                                                             |
-| GitHub Copilot | `AGENTS.md`, `.github/copilot-instructions.md` | [Custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
+| Tool           | Install                      | Entry point                                    | Docs                                                                                                                        |
+|----------------|------------------------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Claude Code    | `.ai-kit/install.sh claude`  | `.claude/CLAUDE.md`                            | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                               |
+| Codex          | `.ai-kit/install.sh codex`   | `AGENTS.md`, `.codex/config.toml`              | [AGENTS.md](https://agents.md/)                                                                                             |
+| GitHub Copilot | `.ai-kit/install.sh copilot` | `AGENTS.md`, `.github/copilot-instructions.md` | [Custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
 
 Copilot has no project subagents in this kit. Its `.github/instructions/*.instructions.md` files carry an `applyTo`
 pattern and point at the guide for that file type; `.github/prompts/` exposes the skills as prompts;
@@ -81,54 +91,101 @@ pattern and point at the guide for that file type; `.github/prompts/` exposes th
 
 ## Getting Started
 
-1. Copy `AGENTS.md`, `.agents/` and the folders for the tools you use (`.claude/`, `.codex/`, `.github/`) into your
-   Drupal project root. `.github/workflows/kit-check.yml` is optional: it checks that the generated copies are in
-   sync.
+Once per project:
+
+1. Copy `AGENTS.md` and `.ai-kit/` into your Drupal project root.
 2. Add the kit's entries to the project's `.gitignore`:
 
    ```
-   .claude/agents.log
-   .claude/settings.local.json
+   .ai-kit/.installed/
+   .claude/
+   .codex/
+   .agents/skills/
+   .github/copilot-instructions.md
+   .github/git-commit-instructions.md
+   .github/instructions/
+   .github/prompts/
    ```
 
-3. Adapt `AGENTS.md` to your project. The `generate-agents-md` skill does the mechanical part — webroot, versions,
-   hook style, theme, CI, commands; hosting and deploy details are yours to add.
-4. Open the project in your assistant and start working — the rules load automatically. Skills run as `/<name>` in
-   Claude Code and `$<name>` in Codex.
+   A project that commits its own skills in `.agents/skills/` lists the kit's skill folders by name instead of the
+   whole folder (`.agents/skills/create-drupal-service/`, …).
 
-Codex applies project `.codex/` settings only after you mark the project as trusted.
+3. Adapt `AGENTS.md` to your project. The `generate-agents-md` skill does the mechanical part — webroot, versions,
+   hook style, theme, CI, commands; hosting and deploy details are yours to add. Install a tool first (below) to run
+   the skill.
+
+Every developer, after cloning the project:
+
+```bash
+.ai-kit/install.sh claude            # or codex, copilot; several names at once work too
+```
+
+Then open the project in the assistant and start working — the rules load automatically. Skills run as `/<name>` in
+Claude Code and `$<name>` in Codex. Codex applies project `.codex/` settings only after you mark the project as
+trusted.
+
+The installed files are copies, so refresh them after `git pull` and after editing anything in `.ai-kit/`:
+
+```bash
+.ai-kit/install.sh                   # refresh the tools you installed
+.ai-kit/install.sh --list            # the tools, and which of them are installed
+.ai-kit/install.sh --remove codex    # delete the files installed for a tool
+```
+
+A team where everybody uses the same tool can commit its settings instead: leave that tool's lines out of
+`.gitignore` and commit the installed folder.
 
 ### Requirements
 
 - The commands in the guides assume [DDEV](https://ddev.com/); `generate-agents-md` tells you what to change for
   another setup.
+- Bash for `.ai-kit/install.sh` (on Windows: Git Bash or WSL).
 - `jq` on the host: the Claude Code hook that logs subagent runs to `.claude/agents.log` uses it.
-- `rsync` on the host for `.agents/sync.sh`.
 - `drupal/coder` (`phpcs`) in the project; PHPStan and Playwright are used when the project has them.
 
 ## Maintenance
 
-Each rule has one source; the copies other tools need are generated:
+Each rule has one source in `.ai-kit/`. `.ai-kit/install.sh` turns it into what a tool reads:
 
-| Source                | Generated copy         | Why                                         |
-|-----------------------|------------------------|---------------------------------------------|
-| `.agents/skills/`     | `.claude/skills/`      | Claude Code reads only `.claude/skills/`    |
-| `.claude/agents/*.md` | `.codex/agents/*.toml` | Codex subagents use TOML                    |
+| Source                  | Claude Code           | Codex                  | Copilot                    |
+|-------------------------|-----------------------|------------------------|----------------------------|
+| `.ai-kit/tools/<tool>/` | `.claude/`            | `.codex/`              | `.github/`                 |
+| `.ai-kit/agents/*.md`   | `.claude/agents/*.md` | `.codex/agents/*.toml` | —                          |
+| `.ai-kit/skills/`       | `.claude/skills/`     | `.agents/skills/`      | through `.github/prompts/` |
 
-```bash
-.agents/sync.sh          # after editing a skill or a subagent
-.agents/sync.sh --check  # exits 1 when a copy is out of date (runs in CI)
+Edit the source, never an installed copy: the next run of `.ai-kit/install.sh` overwrites the copy. The script
+records what it installed in `.ai-kit/.installed/` and deletes only files from that list — a skill or subagent
+removed from `.ai-kit/` disappears from the tool, while personal files (`.claude/settings.local.json`) and the rest
+of `.github/` stay. For the same reason it stops when a file it would write already exists with other content and
+is not on that list, such as a project's own `.github/copilot-instructions.md`: move the file into
+`.ai-kit/tools/<tool>/` to keep it, or run the script with `--force` to overwrite it. A project skill in
+`.agents/skills/` with the name of a kit skill stops `install.sh codex` the same way: rename one of the two.
+
+A file in `.ai-kit/tools/<tool>/` is copied as it is, so it is written for the place it lands in: the links in
+`copilot-instructions.md` and the `@` imports in `CLAUDE.md` resolve from `.github/` and `.claude/`. Such a file wins
+over a generated one with the same path — `.ai-kit/tools/claude/agents/<name>.md` is a subagent only Claude Code
+gets.
+
+Codex-only settings: `<skill>/agents/openai.yaml` is not copied to Claude Code, and a subagent keeps its Codex
+settings as TOML lines in a `codex: |` block of its frontmatter, which Claude Code's copy leaves out:
+
+```yaml
+---
+name: code-reviewer
+description: Independent read-only review of the uncommitted changes.
+tools: Read, Grep, Glob, Bash
+model: sonnet
+codex: |
+  model_reasoning_effort = "medium"
+  sandbox_mode = "read-only"
+---
 ```
 
-`.claude/skills/` is a mirror: `.agents/sync.sh` deletes a skill that exists only there, so a project's own skills
-go to `.agents/skills/` as well.
+To support another tool, create `.ai-kit/tools/<tool>/`, name its folder in `roots_of()` in `.ai-kit/install.sh`,
+and add a case to `build()` if the tool needs generated files.
 
-Codex-only settings stay where they are: `<skill>/agents/openai.yaml` is not copied to Claude Code, and the lines
-above `developer_instructions` in a `.codex/agents/*.toml` file (`model_reasoning_effort`, `sandbox_mode`) survive
-regeneration.
-
-`.github/git-commit-instructions.md` repeats the commit format from `.agents/instructions/git.md` because commit
-message generation reads only that file — change both together.
+`.ai-kit/tools/copilot/git-commit-instructions.md` repeats the commit format from `.ai-kit/instructions/git.md`
+because commit message generation reads only that file — change both together.
 
 ## License
 

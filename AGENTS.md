@@ -79,18 +79,20 @@ ddev exec vendor/bin/phpstan analyse <webroot>/modules/custom/                  
 - Services are registered by class name with `autowire: true` and live in `src/Service/`
 - Hooks: OOP `#[Hook]` classes in `src/Hook/` on Drupal 11.1+ (preprocess hooks from 11.2), procedural in `.module`
   on 10.x — check the installed core version first
-- Follow Drupal Coding Standards (see [`php.md`](.agents/instructions/php.md), [`drupal.md`](.agents/instructions/drupal.md))
-- Twig: logic-free templates, use preprocess functions (see [`twig.md`](.agents/instructions/twig.md))
-- JS: Drupal Behaviors with `once()`, scoped to component (see [`js.md`](.agents/instructions/js.md))
+- Follow Drupal Coding Standards (see [`php.md`](.ai-kit/instructions/php.md), [`drupal.md`](.ai-kit/instructions/drupal.md))
+- Twig: logic-free templates, use preprocess functions (see [`twig.md`](.ai-kit/instructions/twig.md))
+- JS: Drupal Behaviors with `once()`, scoped to component (see [`js.md`](.ai-kit/instructions/js.md))
 
 ## Agent Guides and Skills
 
 Shared by every agent — read the guide for the area you touch before changing code:
 
-- Guides: [`.agents/instructions/`](.agents/instructions/) — `drupal.md`, `php.md`, `twig.md`, `js.md`, `git.md`.
-- Skills: [`.agents/skills/`](.agents/skills/) — `create-drupal-service`, `create-drupal-plugin`,
+- Guides: [`.ai-kit/instructions/`](.ai-kit/instructions/) — `drupal.md`, `php.md`, `twig.md`, `js.md`, `git.md`.
+- Skills: [`.ai-kit/skills/`](.ai-kit/skills/) — `create-drupal-service`, `create-drupal-plugin`,
   `drupal-performance-review`, `drupal-refactor-to-di`, `git-commit`, `generate-agents-md` (fills this file with the
   project's real values; explicit use only).
+- Tool settings: `.claude/`, `.codex/`, `.agents/skills/` and the Copilot files in `.github/` are copies generated
+  by `.ai-kit/install.sh`. Edit the source in `.ai-kit/` (`agents/`, `skills/`, `tools/<tool>/`), then run the script.
 
 ### Safety
 
@@ -99,8 +101,8 @@ Shared by every agent — read the guide for the area you touch before changing 
 
 ### Subagents
 
-Both tools ship the same project subagents: `drupal-backend`, `theme-frontend`, `e2e-tester`, `drupal-ops`,
-`code-reviewer`, `seo-analytics` (Claude Code: `.claude/agents/*.md`; Codex: `.codex/agents/*.toml`).
+Claude Code and Codex get the same project subagents: `drupal-backend`, `theme-frontend`, `e2e-tester`,
+`drupal-ops`, `code-reviewer`, `seo-analytics` (source: `.ai-kit/agents/*.md`).
 
 - After finishing a code change and before `git commit`: run `code-reviewer` on the diff.
 - After changing Twig, CSS, JS or page content: run `e2e-tester` (in the background if you keep working); when CI e2e
@@ -111,7 +113,7 @@ Both tools ship the same project subagents: `drupal-backend`, `theme-frontend`, 
 
 ## Git Conventions
 
-See [`git.md`](.agents/instructions/git.md) for full rules.
+See [`git.md`](.ai-kit/instructions/git.md) for full rules.
 
 - **Branch naming**: `<type>/<ticket-number>-<description>` (e.g., `feature/329-search-styling`)
 - **Commit format**: `#<TICKET>: <Description>.` — present tense imperative, max 72 chars, ends with period
