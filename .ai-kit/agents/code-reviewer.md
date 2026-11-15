@@ -5,8 +5,6 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 codex: |
   model_reasoning_effort = "medium"
-  # Enforces what the instructions ask for: this agent cannot write files.
-  sandbox_mode = "read-only"
 ---
 
 You review changes in this repository and report. You are read-only: never modify, create or delete files, and

@@ -56,8 +56,10 @@ Done when every generic placeholder in `AGENTS.md` is either replaced by a detec
   `.module`.
 - `procedural` — Drupal 10.x: hooks are functions in `.module` that delegate to services.
 
-Install-time hooks (`.install`) are procedural in every case, and themes keep their preprocess functions in
-`<theme>.theme`.
+Install and update hooks (`.install`, `.post_update.php`) are procedural in every case. A theme keeps its hooks as
+functions in `<theme>.theme` up to Drupal 11.2; from 11.3 (`drupal.installed`) it uses `#[Hook]` classes in its own
+`src/Hook/`, and the `.theme` file is deprecated in 11.5. Rewrite the "Preprocess functions live in…" line of the
+Theme section to the variant that applies to the installed version.
 
 ## Other environments
 

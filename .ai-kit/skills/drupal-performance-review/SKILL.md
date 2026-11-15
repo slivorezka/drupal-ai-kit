@@ -25,8 +25,10 @@ appear only when you measured them; an unmeasured impact is described, never est
 - Render arrays without `#cache` — tags, contexts and max-age all considered.
 - Contexts that are too broad (`user` where `user.roles` or `user.permissions` is enough) or missing (output
   varies by something that is not declared).
-- `max-age: 0` or `\Drupal::service('page_cache_kill_switch')` disabling the page cache for a whole page;
-  `#lazy_builder` isolates the dynamic part instead.
+- `max-age: 0` bubbling to a whole page: the Dynamic Page Cache skips the response, while the Internal Page Cache
+  ignores bubbled max-age and still stores the page for anonymous users — slow for logged-in users, stale for
+  anonymous ones. `\Drupal::service('page_cache_kill_switch')` turns both caches off for the response. In both
+  cases isolate the dynamic part with `#lazy_builder` and leave the page cacheable.
 - Expensive computation repeated per request without a cache bin, or cached without tags to invalidate it.
 - Cache metadata lost on the way: fields printed one by one in Twig without rendering `content`, access results
   without `addCacheableDependency()`.

@@ -73,10 +73,9 @@ my_module/
 └── my_module.libraries.yml
 ```
 
-Install-time hooks — `hook_install()`, `hook_uninstall()`, `hook_update_N()`, `hook_schema()`,
-`hook_requirements()` — **cannot** be OOP hooks and must remain procedural in the `.install` file even on
-Drupal 11.1+. They run before the container/hook attributes are available. Everything else uses OOP hooks on 11.1+
-(see §3).
+Some hooks **cannot** be OOP hooks on any version and stay procedural: the install and update hooks in `.install`
+and `.post_update.php`, and the legacy meta hooks `hook_hook_info()` and `hook_module_implements_alter()` in
+`.module`. The full list is in §3. Other hooks are OOP on 11.1+ (preprocess hooks from 11.2).
 
 ### Module Files Description
 
@@ -154,14 +153,27 @@ the approach consistent across the module. On **Drupal 10.x** OOP hooks are not 
 procedural functions in `my_module.module` and delegate the logic to injected services.
 
 **Preprocess hooks** (`hook_preprocess()`, `hook_preprocess_HOOK()`) can be OOP from **Drupal 11.2**. On 11.1 a
-`#[Hook('preprocess_…')]` attribute throws an exception: keep preprocess hooks procedural in `.module` there. Themes
-keep their preprocess functions in `<theme>.theme`.
+`#[Hook('preprocess_…')]` attribute throws an exception: keep preprocess hooks procedural in `.module` there.
+
+**Themes** implement hooks as functions in `<theme>.theme` up to Drupal 11.2. From **Drupal 11.3** a theme uses the
+same `#[Hook]` classes in its own `src/Hook/` (namespace `Drupal\<theme>\Hook`): constructor arguments are
+autowired; the `module` and `order` parameters, `#[ReorderHook]` and `#[RemoveHook]` are not supported; and a theme
+cannot define services of its own. The `.theme` file is deprecated in Drupal 11.5.
 
 Hooks may be split across multiple classes in `src/Hook/` — group them by concern rather than putting everything in one
 class.
 
-**Exception:** install-time hooks (`hook_install()`, `hook_uninstall()`, `hook_update_N()`, `hook_schema()`,
-`hook_requirements()`) cannot be OOP hooks — keep them procedural in the `.install` file (see §2).
+**Procedural only** on every version — core finds these only as functions, so they get no `#[Hook]` attribute:
+
+- `.install`: `hook_install()`, `hook_uninstall()`, `hook_schema()`, `hook_update_N()`,
+  `hook_update_last_removed()`, `hook_update_dependencies()`, `hook_requirements()`;
+- `.post_update.php`: `hook_post_update_NAME()`, `hook_removed_post_updates()`;
+- installation profiles: `hook_install_tasks()`, `hook_install_tasks_alter()`;
+- `.module`: the legacy meta hooks `hook_hook_info()` and `hook_module_implements_alter()`.
+
+`hook_requirements()` is deprecated in Drupal 11.3. From 11.2 use its replacements: `hook_runtime_requirements()`
+and `hook_update_requirements()` — ordinary hooks, so OOP — and for install-time checks a class in
+`src/Install/Requirements/` that implements `InstallRequirementsInterface`.
 
 ```php
 <?php
@@ -376,12 +388,12 @@ goes into a folder by its role (`Service`, `Utility`, `Hook`, `Controller`, `Plu
 constructor parameter with the same name (`private readonly EntityTypeManagerInterface $entityTypeManager` in a
 controller) is a fatal error — the child may not narrow the visibility or add a type.
 
-| Base class       | Properties it declares                                                                                                                               |
-|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Base class       | Properties it declares                                                                                                                                           |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ControllerBase` | `$entityTypeManager`, `$entityFormBuilder`, `$configFactory`, `$keyValue`, `$currentUser`, `$stateService`, `$moduleHandler`, `$formBuilder`, `$languageManager` |
-| `FormBase`       | `$configFactory`, `$requestStack`, `$routeMatch`                                                                                                     |
-| `PluginBase`     | `$configuration`, `$pluginId`, `$pluginDefinition`                                                                                                   |
-| all three        | `$messenger`, `$stringTranslation`; controllers and forms also `$loggerFactory`, `$redirectDestination`                                              |
+| `FormBase`       | `$configFactory`, `$requestStack`, `$routeMatch`                                                                                                                 |
+| `PluginBase`     | `$configuration`, `$pluginId`, `$pluginDefinition`                                                                                                               |
+| all three        | `$messenger`, `$stringTranslation`; controllers and forms also `$loggerFactory`, `$redirectDestination`                                                          |
 
 In a subclass inject the dependency under a name the base class does not use (`$nodeStorage`, `$account`,
 `$settings`), or call the inherited accessor (`$this->entityTypeManager()`, `$this->currentUser()`,
@@ -690,8 +702,8 @@ final class DatabaseService {
 
 ### Block Plugin
 
-The `#[Block(...)]` attribute must sit directly above the class declaration (column 0) and both it and
-`TranslatableMarkup` must be imported.
+The `#[Block(...)]` attribute sits directly above the class declaration; both it and `TranslatableMarkup` must be
+imported.
 
 ```php
 <?php
@@ -818,13 +830,36 @@ requirements:
   _permission: 'access content'
 ```
 
-In code, throw `AccessDeniedHttpException` (import it) when a controller or access callback must deny access:
+In a controller, throw `AccessDeniedHttpException` (import it) to deny access:
 
 ```php
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 if (!$this->currentUser()->hasPermission('my permission')) {
   throw new AccessDeniedHttpException();
+}
+```
+
+An access callback — a route's `_custom_access`, an access check service, `hook_entity_access()` — never throws. It
+returns an `AccessResultInterface`, which also carries the cache metadata of the decision; for a route access check
+any other return value is an `AccessException`.
+
+```php
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Checks access to the route.
+ *
+ * @param \Drupal\Core\Session\AccountInterface $account
+ *   The account to check.
+ *
+ * @return \Drupal\Core\Access\AccessResultInterface
+ *   The access result.
+ */
+public function access(AccountInterface $account): AccessResultInterface {
+  return AccessResult::allowedIfHasPermission($account, 'my permission');
 }
 ```
 

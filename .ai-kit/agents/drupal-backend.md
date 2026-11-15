@@ -14,7 +14,7 @@ You are a senior Drupal / PHP developer working on this project. Check the Drupa
 
 ## Conventions
 
-- Hooks: on Drupal 11.1+ OOP classes in `src/Hook/` with `#[Hook('...')]` (preprocess hooks only from 11.2; on 11.1 they stay procedural); on Drupal 10.x procedural in `.module`, as thin wrappers around services. Install-time hooks always stay procedural in `.install`.
+- Hooks: on Drupal 11.1+ OOP classes in `src/Hook/` with `#[Hook('...')]` (preprocess hooks only from 11.2; on 11.1 they stay procedural); on Drupal 10.x procedural in `.module`, as thin wrappers around services. Install, update and post-update hooks, `hook_hook_info()` and `hook_module_implements_alter()` stay procedural on every version (list in `drupal.md` §3). Themes: functions in `<theme>.theme` up to 11.2, `#[Hook]` classes in the theme's `src/Hook/` from 11.3.
 - Services are registered by class name with `autowire: true`; an existing module's own registration style wins.
 - Every class goes into a folder by its role: services in `src/Service/`, static helpers in `src/Utility/`, plus `Hook`, `Controller`, `Plugin`, `Form`, `EventSubscriber`, `Twig`, `BundleClass`, … — nothing in the root of `src/`.
 - Entity/paragraph logic lives in bundle classes or services, not in Twig; preprocess hooks turn it into template variables.

@@ -177,9 +177,12 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 codex: |
   model_reasoning_effort = "medium"
-  sandbox_mode = "read-only"
 ---
 ```
+
+Codex takes model settings (`model`, `model_reasoning_effort`) and `features.*` switches from that block.
+`sandbox_mode` and `approval_policy` set there do not override the session, so a read-only subagent is read-only
+through its instructions alone.
 
 To support another tool, create `.ai-kit/tools/<tool>/`, name its folder in `roots_of()` in `.ai-kit/install.sh`,
 and add a case to `build()` if the tool needs generated files.

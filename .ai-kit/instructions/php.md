@@ -339,8 +339,10 @@ save and `phpcs --standard=Drupal,DrupalPractice` unchanged.
 
 - **2 spaces** for indentation (Drupal standard)
 - Blank lines between methods
-- Lines under 80 characters (Drupal Coder standard). Long lines are flagged by
-  `phpcs --standard=Drupal`; wrap arguments or extract variables to stay within the limit.
+- Comment lines stay within 80 characters: `phpcs --standard=Drupal` flags longer ones (lines with a doc tag such
+  as `@param`, URLs and `@code` blocks are exempt).
+- Code lines stay within 80 characters where that reads well. The standard lets function and class declarations
+  and similar lines exceed it, and `phpcs` does not check the length of code lines.
 
 ### Arrays
 
@@ -399,7 +401,7 @@ echo Html::escape($variable);
 
 ### Permissions
 
-Throw `AccessDeniedHttpException` (import it) from controllers and access callbacks:
+Throw `AccessDeniedHttpException` (import it) from controllers:
 
 ```php
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -408,6 +410,10 @@ if (!$this->currentUser()->hasPermission('manage users')) {
   throw new AccessDeniedHttpException();
 }
 ```
+
+Access callbacks (`_custom_access`, access check services, access hooks) never throw: they return an
+`AccessResultInterface` such as `AccessResult::allowedIfHasPermission($account, 'manage users')`. See
+[`drupal.md`](drupal.md) §10.
 
 ---
 

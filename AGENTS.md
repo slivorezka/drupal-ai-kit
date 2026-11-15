@@ -66,7 +66,8 @@ ddev exec vendor/bin/phpstan analyse <webroot>/modules/custom/                  
 ### Theme
 
 - Override the base theme instead of copying it wholesale; keep the overrides in the custom theme.
-- Preprocess functions live in `<theme>.theme`; libraries in `<theme>.libraries.yml`; layouts in `<theme>.layouts.yml`.
+- Preprocess functions live in `<theme>.theme` (from Drupal 11.3: `#[Hook]` classes in the theme's `src/Hook/`);
+  libraries in `<theme>.libraries.yml`; layouts in `<theme>.layouts.yml`.
 - Reuse component templates instead of duplicating markup.
 - JS uses Drupal Behaviors with `once()`.
 

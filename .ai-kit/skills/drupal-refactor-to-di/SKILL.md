@@ -54,8 +54,11 @@ first. This skill is the procedure.
 4. **Procedural code** (`.module`, `.install`, `.theme`) has no constructor.
    - Drupal 11.2+: move each hook to a `#[Hook]` method on a class in `src/Hook/` and delete the function.
    - Drupal 11.1: the same, except preprocess hooks, which stay procedural.
-   - Drupal 10.x, install-time hooks on every version, and `<theme>.theme` functions: keep the function as a thin
-     wrapper that fetches one service with `\Drupal::service()` and delegates to it. Static calls are accepted
+   - Theme hooks in `<theme>.theme`: from Drupal 11.3 move them the same way to `#[Hook]` classes in the theme's
+     own `src/Hook/`; up to 11.2 they stay functions.
+   - Drupal 10.x, the procedural-only hooks on every version (install and update hooks, `hook_hook_info()`,
+     `hook_module_implements_alter()` — `drupal.md` §3), and theme functions up to 11.2: keep the function as a
+     thin wrapper that fetches one service with `\Drupal::service()` and delegates to it. Static calls are accepted
      there and nowhere else.
 
    ```php
