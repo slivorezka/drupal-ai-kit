@@ -68,10 +68,10 @@ AGENTS.md            # Shared project rules (Codex, Claude Code)
 
 ## Supported Tools
 
-| Tool           | Entry point                       | Docs                                                                                                                 |
-|----------------|-----------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| Claude Code    | `.claude/CLAUDE.md`               | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                        |
-| Codex          | `AGENTS.md`, `.codex/config.toml` | [AGENTS.md](https://agents.md/)                                                                                      |
+| Tool           | Entry point                       | Docs                                                                                                                        |
+|----------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Claude Code    | `.claude/CLAUDE.md`               | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                               |
+| Codex          | `AGENTS.md`, `.codex/config.toml` | [AGENTS.md](https://agents.md/)                                                                                             |
 | GitHub Copilot | `.github/copilot-instructions.md` | [Custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
 
 ## Getting Started
