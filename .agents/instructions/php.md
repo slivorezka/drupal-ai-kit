@@ -139,9 +139,9 @@ public function getUser(int $userId): ?UserInterface {
 
 ### Hook Documentation (OOP hooks)
 
-On Drupal 11.1+ hooks are OOP classes in `src/Hook/`, annotated with `#[Hook(...)]` (on Drupal 10.x they stay
-procedural in `.module`, documented the same way). Each implementation still
-carries a standard `Implements hook_...()` docblock. Procedural `.module` hooks are the legacy alternative — pick one
+On Drupal 11.1+ hooks are OOP classes in `src/Hook/`, annotated with `#[Hook(...)]`; preprocess hooks join them
+from Drupal 11.2 (on 11.1 they stay procedural). On Drupal 10.x all hooks stay procedural in `.module`, documented
+the same way. Each implementation still carries a standard `Implements hook_...()` docblock. Procedural `.module` hooks are the legacy alternative — pick one
 approach per module and keep it consistent (see the main Drupal doc §3).
 
 ```php
@@ -209,21 +209,30 @@ hooks, plugins, forms, Drush commands, event subscribers and Twig extensions kee
 Static helper classes (constants and/or static methods, not services) live in `src/Utility/` (namespace
 `Drupal\<module>\Utility`). No classes in the root of `src/`.
 
+Register a service by its class name with autowiring; the class name is the service ID:
+
 ```yaml
 services:
-  mymodule.user_service:
-    class: Drupal\mymodule\Service\UserService
-    arguments:
-      - '@database'
-      - '@entity_type.manager'
+  Drupal\mymodule\Service\UserService:
+    autowire: true
 ```
+
+### Inherited Properties
+
+`ControllerBase`, `FormBase` and `PluginBase` already declare properties such as `$entityTypeManager`,
+`$currentUser`, `$configFactory` and `$messenger`. Promoting a constructor parameter with one of those names is a
+fatal error: inject under another name (`$nodeStorage`, `$account`) or call the inherited accessor
+(`$this->currentUser()`). The full list is in [`drupal.md`](drupal.md) §5.
 
 ---
 
 ## 6. Controllers
 
 Controllers should only validate input, call services, and return responses. Never serialize an entity object directly
-into a `JsonResponse` — build a prepared array of the values you intend to expose:
+into a `JsonResponse` — build a prepared array holding only the fields the client needs (personal data such as
+e-mail addresses stays out unless the route's access check is meant to cover it). Let unexpected exceptions reach
+Drupal's exception handler, which logs them and answers with a 500; an exception message never goes into a
+response.
 
 ```php
 /**
@@ -243,7 +252,7 @@ final class UserController extends ControllerBase {
    */
   public static function create(ContainerInterface $container): self {
     return new self(
-      $container->get('mymodule.user_service'),
+      $container->get(UserService::class),
     );
   }
 
@@ -251,21 +260,15 @@ final class UserController extends ControllerBase {
    * Returns user data as JSON.
    */
   public function getUser(int $userId): JsonResponse {
-    try {
-      $user = $this->userService->getUser($userId);
-      if ($user === NULL) {
-        return new JsonResponse(['error' => 'Not found'], 404);
-      }
-      $payload = [
-        'id' => (int) $user->id(),
-        'name' => $user->getAccountName(),
-        'email' => $user->getEmail(),
-      ];
-      return new JsonResponse($payload);
+    $user = $this->userService->getUser($userId);
+    if ($user === NULL) {
+      return new JsonResponse(['error' => 'Not found'], 404);
     }
-    catch (\Exception $e) {
-      return new JsonResponse(['error' => $e->getMessage()], 400);
-    }
+    $payload = [
+      'id' => (int) $user->id(),
+      'name' => $user->getDisplayName(),
+    ];
+    return new JsonResponse($payload);
   }
 
 }
@@ -401,7 +404,7 @@ Throw `AccessDeniedHttpException` (import it) from controllers and access callba
 ```php
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-if (!$this->currentUser->hasPermission('manage users')) {
+if (!$this->currentUser()->hasPermission('manage users')) {
   throw new AccessDeniedHttpException();
 }
 ```
@@ -417,14 +420,30 @@ if (!$this->currentUser->hasPermission('manage users')) {
 - Test classes: `[ClassName]Test` (e.g., `UserServiceTest`)
 - Test methods: `test[MethodName][Scenario]` (e.g., `testGetUserByIdNotFound`)
 
+### Test Metadata
+
+Drupal 11 runs PHPUnit 10+, where test metadata is PHP attributes (`#[CoversClass]`, `#[Group]`,
+`#[DataProvider]`). Drupal 10 runs PHPUnit 9, which only reads the docblock annotations (`@covers`, `@group`,
+`@dataProvider`). Use the form that matches the project's core version.
+
+### Mocking
+
+PHPUnit cannot mock a `final` class. A service that other classes mock in their unit tests gets an interface, and
+callers type-hint the interface; otherwise build the real object with mocked dependencies.
+
 ### Test Coverage
 
 Aim for 80%+ on services and business logic:
 
 ```php
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+
 /**
- * @covers \Drupal\mymodule\Service\UserService
+ * Tests the user service.
  */
+#[CoversClass(UserService::class)]
+#[Group('mymodule')]
 final class UserServiceTest extends UnitTestCase {
 
   /**

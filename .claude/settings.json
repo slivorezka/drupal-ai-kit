@@ -1,6 +1,4 @@
 {
-  "model": "opus",
-  "alwaysThinkingEnabled": false,
   "env": {
     "CLAUDE_CODE_HIDE_ACCOUNT_INFO": "1"
   },
@@ -11,7 +9,9 @@
       "Edit(**/.env)",
       "Edit(**/.env.*)",
       "Write(**/.env)",
-      "Write(**/.env.*)"
+      "Write(**/.env.*)",
+      "Bash(* .env*)",
+      "Bash(*/.env*)"
     ]
   },
   "hooks": {
@@ -25,32 +25,6 @@
           }
         ]
       }
-    ]
-  },
-  "tools": {
-    "bash": true,
-    "git": true,
-    "filesystem": true
-  },
-  "context": {
-    "include": [
-      "src/**",
-      "web/modules/custom/**",
-      "web/themes/custom/**",
-      "app/**",
-      "config/**",
-      "composer.json",
-      "package.json",
-      "README.md"
-    ],
-    "exclude": [
-      "node_modules/**",
-      "vendor/**",
-      ".git/**",
-      "dist/**",
-      "build/**",
-      "coverage/**",
-      "*.log"
     ]
   }
 }

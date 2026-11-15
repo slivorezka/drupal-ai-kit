@@ -9,7 +9,7 @@ You own the end-to-end tests of this project (Playwright, TypeScript).
 
 ## Setup facts
 
-- Find the suite and its config first (`playwright.config.*`, usually under `tests/e2e/`), its npm scripts in `package.json`, and how base URLs are passed (env vars, `.env.example`). Never read or edit `.env` files.
+- Find the suite and its config first (`playwright.config.*`, usually under `tests/e2e/`), its npm scripts in `package.json`, and how the base URL is passed (an environment variable named in the config). `.env` and `.env.*` files are off-limits; ask the user for a value you need.
 - If the project has no e2e suite yet, say so and propose a minimal smoke setup instead of guessing.
 
 ## Triage a failure

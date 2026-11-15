@@ -4,80 +4,20 @@ description: Generate a commit message in the project format (#329: Description.
 argument-hint: [ context ]
 ---
 
-Generate a properly formatted Git commit message for the current changes based on the active branch name.
+Write a commit message for the current changes. Extra context from the user: $ARGUMENTS
 
-Context: $ARGUMENTS
+The format is defined in `.agents/instructions/git.md`, "Commit messages" — read it first.
 
-## Rules
+## Steps
 
-### Branch-Based Commit Message Format
+1. **Ticket.** `git branch --show-current`; the ticket number is the digits right after `<type>/`
+   (`feature/329-search-styling` → `329`). No digits there: the message has no `#<n>: ` prefix.
+2. **Changes.** `git diff --staged`. Nothing staged: read `git status --short` and `git diff` instead, and say that
+   nothing is staged yet.
+3. **Message.** One sentence naming what the change does, in the format from `git.md`. Add a bulleted body when
+   the diff has several parts that one line cannot name.
+4. **Split.** A diff holding more than one logical change gets one message per commit, each with the files that
+   belong to it.
+5. **Check** the first line: at most 72 characters, capital letter after the prefix, imperative verb, final period.
 
-The commit message format depends on the current Git branch:
-
-**For `feature/*` and `bugfix/*` branches:**
-- Extract the ticket number from the branch name
-- Format: `#<TICKET_NUMBER>: <Description>.`
-- Example:
-  - Branch: `feature/329-search-styling`
-  - Commit: `#329: Update search feature styling.`
-
-**For `hotfix/*` branches:**
-- Format: `#<TICKET_NUMBER>: <Description>.`
-- If no ticket number in branch name, use a descriptive message
-
-**For `docs/*` branches:**
-- Format: `#<TICKET_NUMBER>: <Description>.` (if ticket exists)
-- Or: `Update <subject> documentation.`
-
-**For `refactor/*` branches:**
-- Format: `#<TICKET_NUMBER>: <Description>.` (if ticket exists)
-- Or: `Refactor <subject>.`
-
-### General Rules
-
-1. **Capitalize** the first letter of the description
-2. **End with period** (full stop)
-3. **Max 72 characters** for the first line
-4. **Present tense imperative**: "Add", "Fix", "Update", "Remove", "Refactor"
-5. **One logical change** per commit
-
-### Good Examples
-
-```
-#329: Update search feature styling.
-#445: Add user profile avatar upload.
-#456: Fix mobile menu alignment issue.
-#789: Remove deprecated helper functions.
-#102: Refactor database queries to use batch loading.
-```
-
-### Bad Examples (avoid these)
-
-```
-updates the search styling          # No ticket, no period, lowercase verb
-Fixed header on mobile              # Past tense, no ticket
-#329 search styling updates         # Missing colon, no period
-329: search styling                 # Missing hash, no capitalization, no period
-```
-
-### Extended Format (for complex changes)
-
-If the changes are complex, generate an extended message:
-
-```
-#329: Add search feature styling.
-
-- Update search input styling for better UX
-- Improve search results display
-- Add loading indicator
-- Fix accessibility issues with form labels
-```
-
-## Instructions
-
-1. Check the current Git branch name
-2. Extract the ticket number if present
-3. Analyze the staged or recent changes
-4. Generate one or more commit message options following the format above
-5. If the context describes multiple logical changes, suggest splitting into separate commits
-
+Output the message in a code block. Run `git commit` only when the user asked for the commit itself.

@@ -1,72 +1,57 @@
 ---
 name: create-drupal-service
-description: Create a Drupal service class with services.yml entry
+description: Create a Drupal service class in a custom module and register it in the module's services.yml
 argument-hint: <ServiceName> in <module> — <purpose, dependencies, methods>
 ---
 
-You are a Drupal 10/11 expert. Create a well-structured Drupal service class following best practices, dependency injection
-patterns, and PHP 8.3+ standards.
+Create the service described here: $ARGUMENTS
 
-Parse the following input for service details: $ARGUMENTS
+The module is required — ask when it is missing. Infer missing dependencies and methods from the purpose and name
+what you inferred in the report.
 
-The input should contain: service name, module name, purpose, dependencies, and methods. If any details are missing,
-infer reasonable defaults from the service name and purpose.
+The rules for the class are in `.agents/instructions/drupal.md` §5 and `.agents/instructions/php.md`; read both
+first. This skill is the procedure.
 
-## Requirements
+## Steps
 
-### Class Structure
+1. **Look at the module.** Open `<webroot>/modules/custom/<module>/<module>.services.yml` and one class in
+   `src/Service/`. An existing registration style in the module wins over the default below.
 
-1. Start with `declare(strict_types=1);`
-2. Namespace: `Drupal\{my_module}\Service\{ServiceName}`
-3. Use constructor dependency injection only (no `\Drupal::service()` calls)
-4. Use `private readonly` for all injected dependencies
-5. All methods must have typed parameters and return types
+2. **Write the class** at `src/Service/<ServiceName>.php`, namespace `Drupal\<module>\Service`:
+   - `final`, dependencies as `private readonly` promoted constructor parameters typed by interface;
+   - a typed public method per requested operation, each with PHPDoc (`@param`, `@return`, `@throws`);
+   - specific exception types; log failures through an injected logger channel.
 
-### Code Quality
+3. **Register it** in `<module>.services.yml` — by class name with autowiring:
 
-- Comprehensive PHPDoc blocks for the class and all methods
-- Include `@param`, `@return`, `@throws` tags
-- Use camelCase for methods/properties, UPPERCASE_WITH_UNDERSCORES for constants
-- Meaningful variable names
-- Error handling with specific exceptions
-- Logger service for logging
+   ```yaml
+   services:
+     Drupal\<module>\Service\<ServiceName>:
+       autowire: true
+   ```
 
-### Output
+   A dependency that autowiring cannot resolve from its type (a logger channel, a cache bin) takes an attribute on
+   the constructor parameter: `#[Autowire(service: 'logger.channel.<module>')]`. Register the logger channel when the
+   module has none (`drupal.md` §13).
 
-Generate all of the following:
+4. **Add an interface** (`src/Service/<ServiceName>Interface.php`) when other classes will mock the service in
+   their unit tests: PHPUnit cannot mock a `final` class. Callers then type-hint the interface, and `services.yml`
+   aliases it: `Drupal\<module>\Service\<ServiceName>Interface: '@Drupal\<module>\Service\<ServiceName>'`.
 
-1. **Complete PHP Service Class** — Full file with opening tag, strict types, namespace, imports, class with all
-   methods, and PHPDoc documentation.
+5. **Add a unit test** at `tests/src/Unit/Service/<ServiceName>Test.php` covering each public method.
 
-2. **Services.yml Entry** — Ready to paste into the module's `*.services.yml`:
+6. **Verify.**
 
-```yaml
-services:
-  {my_module}.{service_name}:
-    class: Drupal\{my_module}\Service\{ServiceName}
-    arguments:
-      - '@dependency1'
-      - '@dependency2'
-```
+   ```bash
+   ddev drush cr
+   ddev drush php:eval 'var_dump(\Drupal::service(\Drupal\<module>\Service\<ServiceName>::class) !== NULL);'
+   ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice <files you created>
+   ddev exec vendor/bin/phpunit <test file>
+   ```
 
-3. **Usage Example** — PHP code showing how to inject and use the service in a controller or another class.
+Done when the container returns the service (`bool(true)`), `phpcs` reports nothing and the test passes.
 
-### Example Input
+## Report
 
-```
-UserProfileService in user_profiles module — manages user profile CRUD operations with database, entity_type.manager, current_user, logger dependencies. Methods: getUserProfile(userId), updateUserProfile(userId, data), deleteUserProfile(userId), getUserProfiles(limit)
-```
-
-### Validation Checklist
-
-- [ ] Strict types declared
-- [ ] Proper namespace
-- [ ] Constructor injection only
-- [ ] All properties typed with `private readonly`
-- [ ] All methods have return types
-- [ ] PHPDoc on class and all methods
-- [ ] Error handling implemented
-- [ ] Logging included
-- [ ] Services.yml entry provided
-- [ ] Usage example provided
-
+Files created or changed, the service ID, anything inferred from an incomplete request, and the result of each
+verify command.

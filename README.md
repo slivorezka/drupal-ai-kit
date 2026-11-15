@@ -12,8 +12,8 @@ shared source of truth and thin tool-specific layers on top of it.
 
 ## Features
 
-- **One set of rules for all tools** — `AGENTS.md` and `.agents/` are shared by Codex and Claude Code; Copilot gets
-  equivalent files in `.github/`.
+- **One set of rules for all tools** — `AGENTS.md` and `.agents/` are read by Codex, Claude Code and Copilot;
+  `.github/` only maps file types and prompts to them.
 - **Drupal-focused standards** — Drupal Coding Standards, PHP 8.3+ with strict types, dependency injection,
   logic-free Twig, Drupal Behaviors JS and a consistent Git workflow.
 - **Reusable skills** — scaffold services and plugins, review performance, refactor to DI, write commit messages.
@@ -28,20 +28,20 @@ shared source of truth and thin tool-specific layers on top of it.
 |--------|----------------------------------------------|
 | Drupal | Module development, hooks, plugins, entities |
 | PHP    | PHP 8.3+ coding standards and best practices |
-| Twig   | Templating rules and preprocess patterns     |
+| Twig   | Templating rules, components, preprocess     |
 | JS     | Drupal Behaviors, AJAX API, `once()` usage   |
 | Git    | Branch naming, commit message format         |
 
 ### Skills
 
-| Skill                       | Purpose                                         |
-|-----------------------------|-------------------------------------------------|
-| `create-drupal-service`     | Scaffold a service class and its `services.yml` |
-| `create-drupal-plugin`      | Scaffold a plugin (Block, FieldWidget, etc.)    |
-| `drupal-performance-review` | Find query, caching and rendering issues        |
-| `drupal-refactor-to-di`     | Replace `\Drupal::` calls with DI               |
-| `git-commit`                | Write a commit message in the project format    |
-| `drupal`                    | Generate an `AGENTS.md` for a Drupal project    |
+| Skill                       | Purpose                                                  |
+|-----------------------------|----------------------------------------------------------|
+| `create-drupal-service`     | Create a service class and register it                   |
+| `create-drupal-plugin`      | Create a plugin (Block, FieldWidget, etc.)               |
+| `drupal-performance-review` | Find query, caching and rendering issues                 |
+| `drupal-refactor-to-di`     | Replace `\Drupal::` calls with DI                        |
+| `git-commit`                | Write a commit message in the project format             |
+| `generate-agents-md`        | Fill `AGENTS.md` with the project's real values          |
 
 ### Subagents
 
@@ -57,46 +57,75 @@ shared source of truth and thin tool-specific layers on top of it.
 ## Repository Layout
 
 ```
-AGENTS.md            # Shared project rules (Codex, Claude Code)
+AGENTS.md            # Shared project rules (Codex, Claude Code, Copilot)
 .agents/
 ├── instructions/    # Topic guides: drupal, php, twig, js, git
-└── skills/          # Skills — source of truth
-.claude/             # Claude Code: CLAUDE.md, settings, subagents, skills copy
-.codex/              # Codex: config.toml, subagents
-.github/             # GitHub Copilot: instructions and prompts
+├── skills/          # Skills — source of truth
+└── sync.sh          # Regenerates the tool-specific copies
+.claude/             # Claude Code: CLAUDE.md, settings, subagents (source), skills (copy)
+.codex/              # Codex: config.toml, subagents (generated)
+.github/             # Copilot: pointers to AGENTS.md, the guides and the skills
 ```
 
 ## Supported Tools
 
-| Tool           | Entry point                       | Docs                                                                                                                        |
-|----------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| Claude Code    | `.claude/CLAUDE.md`               | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                               |
-| Codex          | `AGENTS.md`, `.codex/config.toml` | [AGENTS.md](https://agents.md/)                                                                                             |
-| GitHub Copilot | `.github/copilot-instructions.md` | [Custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
+| Tool           | Entry point                                    | Docs                                                                                                                        |
+|----------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Claude Code    | `.claude/CLAUDE.md`                            | [Memory and instructions](https://docs.claude.com/en/docs/claude-code/memory)                                               |
+| Codex          | `AGENTS.md`, `.codex/config.toml`              | [AGENTS.md](https://agents.md/)                                                                                             |
+| GitHub Copilot | `AGENTS.md`, `.github/copilot-instructions.md` | [Custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
+
+Copilot has no project subagents in this kit. Its `.github/instructions/*.instructions.md` files carry an `applyTo`
+pattern and point at the guide for that file type; `.github/prompts/` exposes the skills as prompts;
+`.github/git-commit-instructions.md` drives commit message generation in JetBrains IDEs.
 
 ## Getting Started
 
 1. Copy `AGENTS.md`, `.agents/` and the folders for the tools you use (`.claude/`, `.codex/`, `.github/`) into your
-   Drupal project root.
-2. Adapt `AGENTS.md` to your project: modules, theme, local environment, commands.
-3. Open the project in your assistant and start working — the rules load automatically. Skills run as `/<name>` in
+   Drupal project root. `.github/workflows/kit-check.yml` is optional: it checks that the generated copies are in
+   sync.
+2. Add the kit's entries to the project's `.gitignore`:
+
+   ```
+   .claude/agents.log
+   .claude/settings.local.json
+   ```
+
+3. Adapt `AGENTS.md` to your project. The `generate-agents-md` skill does the mechanical part — webroot, versions,
+   hook style, theme, CI, commands; hosting and deploy details are yours to add.
+4. Open the project in your assistant and start working — the rules load automatically. Skills run as `/<name>` in
    Claude Code and `$<name>` in Codex.
 
 Codex applies project `.codex/` settings only after you mark the project as trusted.
 
+### Requirements
+
+- The commands in the guides assume [DDEV](https://ddev.com/); `generate-agents-md` tells you what to change for
+  another setup.
+- `jq` on the host: the Claude Code hook that logs subagent runs to `.claude/agents.log` uses it.
+- `drupal/coder` (`phpcs`) in the project; PHPStan and Playwright are used when the project has them.
+
 ## Maintenance
 
-Skills are edited in `.agents/skills/` and copied to Claude Code (it reads only `.claude/skills/`):
+Each rule has one source; the copies other tools need are generated:
+
+| Source                | Generated copy         | Why                                         |
+|-----------------------|------------------------|---------------------------------------------|
+| `.agents/skills/`     | `.claude/skills/`      | Claude Code reads only `.claude/skills/`    |
+| `.claude/agents/*.md` | `.codex/agents/*.toml` | Codex subagents use TOML                    |
 
 ```bash
-rsync -a --delete --delete-excluded --exclude='/*/agents/' .agents/skills/ .claude/skills/
+.agents/sync.sh          # after editing a skill or a subagent
+.agents/sync.sh --check  # exits 1 when a copy is out of date (runs in CI)
 ```
 
-Codex-only skill metadata (`<skill>/agents/openai.yaml`) stays in `.agents/skills/` and is not copied.
+Codex-only settings stay where they are: `<skill>/agents/openai.yaml` is not copied to Claude Code, and the lines
+above `developer_instructions` in a `.codex/agents/*.toml` file (`model_reasoning_effort`, `sandbox_mode`) survive
+regeneration.
 
-Subagents and settings use tool-specific formats (`.claude/agents/*.md` and `.codex/agents/*.toml`) — when you change
-one side, update the other.
+`.github/git-commit-instructions.md` repeats the commit format from `.agents/instructions/git.md` because commit
+message generation reads only that file — change both together.
 
 ## License
 
-MIT
+[MIT](LICENSE)

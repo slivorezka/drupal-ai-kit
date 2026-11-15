@@ -1,4 +1,5 @@
-# Codex counterpart of .claude/agents/theme-frontend.md — keep both in sync.
+# Generated from .claude/agents/theme-frontend.md by .agents/sync.sh: edit that file, then run the script.
+# Lines above `developer_instructions` other than `description` are Codex-only and kept as they are.
 name = "theme-frontend"
 description = "Front-end work in the custom Drupal theme — Twig templates, CSS/SCSS and its build, Drupal Behaviors JS, libraries, icons, responsive styling, third-party widget overrides. Use for layout bugs, new components, styling, and template changes."
 developer_instructions = '''

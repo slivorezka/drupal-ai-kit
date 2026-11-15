@@ -1,6 +1,6 @@
 ---
 name: seo-analytics
-description: Implements SEO and analytics changes — Metatag (defaults and node overrides), Open Graph/Twitter cards, XML sitemap, robots.txt, structured data, Google Tag Manager / GA4 events, cookie consent and Consent Mode v2. Use when an SEO audit finding needs a code, config or content change, and for tracking or consent problems. For running audits use the claude-seo plugin instead.
+description: Implements SEO and analytics changes — Metatag (defaults and node overrides), Open Graph/Twitter cards, XML sitemap, robots.txt, structured data, Google Tag Manager / GA4 events, cookie consent and Consent Mode v2. Use when an SEO audit finding needs a code, config or content change, and for tracking or consent problems. It implements fixes; it does not run site audits.
 tools: Read, Grep, Glob, Edit, Write, Bash, WebFetch
 model: inherit
 ---

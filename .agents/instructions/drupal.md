@@ -45,11 +45,15 @@ my_module/
 │   ├── Entity/
 │   │   └── MyEntity.php
 │   ├── Event/
-│   │   ├── MyCustomEvent.php
+│   │   └── MyCustomEvent.php
+│   ├── EventSubscriber/
 │   │   └── MyEventSubscriber.php
 │   └── Hook/
 │       ├── MyHooks.php
 │       └── ThemeHooks.php # Optional: split hooks by concern.
+├── config/
+│   └── schema/
+│       └── my_module.schema.yml # Schema for the module's config and plugin settings.
 ├── templates/
 │   └── my-template.html.twig
 ├── css/
@@ -91,16 +95,13 @@ dependencies:
 
 #### `my_module.services.yml`
 
-Each service's argument list must match its constructor exactly. The `my_module.data_processor` service is defined
-once, in §5 (it takes three arguments); do not register it a second time here. The `EntityService` from §7, which
-depends only on the entity type manager, is registered like this:
+Services are registered by class name with autowiring; the class name is the service ID (see §5). The
+`EntityService` from §7:
 
 ```yaml
 services:
-  my_module.entity_service:
-    class: Drupal\my_module\Service\EntityService
-    arguments:
-      - '@entity_type.manager'
+  Drupal\my_module\Service\EntityService:
+    autowire: true
 ```
 
 #### `my_module.routing.yml`
@@ -151,6 +152,11 @@ On **Drupal 11.1+** use **OOP hooks**: hook implementations are methods on a cla
 `#[Hook(...)]` attribute. Procedural `.module` hooks are the legacy alternative — prefer OOP hooks for new code and keep
 the approach consistent across the module. On **Drupal 10.x** OOP hooks are not available: implement hooks as
 procedural functions in `my_module.module` and delegate the logic to injected services.
+
+**Preprocess hooks** (`hook_preprocess()`, `hook_preprocess_HOOK()`) can be OOP from **Drupal 11.2**. On 11.1 a
+`#[Hook('preprocess_…')]` attribute throws an exception: keep preprocess hooks procedural in `.module` there. Themes
+keep their preprocess functions in `<theme>.theme`.
+
 Hooks may be split across multiple classes in `src/Hook/` — group them by concern rather than putting everything in one
 class.
 
@@ -191,6 +197,8 @@ final class MyHooks {
 
   /**
    * Implements hook_preprocess_HOOK() for nodes.
+   *
+   * OOP preprocess hooks need Drupal 11.2+.
    */
   #[Hook('preprocess_node')]
   public function preprocessNode(array &$variables): void {
@@ -203,6 +211,7 @@ final class MyHooks {
 ### Event Subscribers
 
 Use event subscribers instead of hooks when possible. Define the event class explicitly and reference its constant.
+Event classes live in `src/Event/`, subscribers in `src/EventSubscriber/`.
 
 ```php
 <?php
@@ -238,8 +247,9 @@ final class MyCustomEvent extends Event {
 
 declare(strict_types=1);
 
-namespace Drupal\my_module\Event;
+namespace Drupal\my_module\EventSubscriber;
 
+use Drupal\my_module\Event\MyCustomEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -270,8 +280,8 @@ Register in `my_module.services.yml`:
 
 ```yaml
 services:
-  my_module.event_subscriber:
-    class: Drupal\my_module\Event\MyEventSubscriber
+  Drupal\my_module\EventSubscriber\MyEventSubscriber:
+    autowire: true
     tags:
       - { name: 'event_subscriber' }
 ```
@@ -311,7 +321,7 @@ final class MyController extends ControllerBase {
    */
   public static function create(ContainerInterface $container): self {
     return new self(
-      $container->get('my_module.data_processor'),
+      $container->get(DataProcessor::class),
     );
   }
 
@@ -362,6 +372,25 @@ in the module's `src/Utility/` folder, namespace `Drupal\<module>\Utility`. A he
 service, not a utility: move it to `src/Service/` and inject it. The root of `src/` holds no classes; every class
 goes into a folder by its role (`Service`, `Utility`, `Hook`, `Controller`, `Plugin`, `BundleClass`, …).
 
+**Inherited properties:** Drupal's base classes already declare untyped `protected` properties. Promoting a
+constructor parameter with the same name (`private readonly EntityTypeManagerInterface $entityTypeManager` in a
+controller) is a fatal error — the child may not narrow the visibility or add a type.
+
+| Base class       | Properties it declares                                                                                                                               |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ControllerBase` | `$entityTypeManager`, `$entityFormBuilder`, `$configFactory`, `$keyValue`, `$currentUser`, `$stateService`, `$moduleHandler`, `$formBuilder`, `$languageManager` |
+| `FormBase`       | `$configFactory`, `$requestStack`, `$routeMatch`                                                                                                     |
+| `PluginBase`     | `$configuration`, `$pluginId`, `$pluginDefinition`                                                                                                   |
+| all three        | `$messenger`, `$stringTranslation`; controllers and forms also `$loggerFactory`, `$redirectDestination`                                              |
+
+In a subclass inject the dependency under a name the base class does not use (`$nodeStorage`, `$account`,
+`$settings`), or call the inherited accessor (`$this->entityTypeManager()`, `$this->currentUser()`,
+`$this->config()`, `$this->messenger()`, `$this->t()`). Check the base class before naming a property.
+
+**`final` and mocking:** classes are `final` by default. PHPUnit cannot mock a `final` class, so a service that
+other classes mock in their unit tests gets an interface (`DataProcessorInterface`), callers type-hint the
+interface, and `services.yml` aliases it to the class.
+
 ```php
 <?php
 
@@ -372,6 +401,7 @@ namespace Drupal\my_module\Service;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Service for data processing.
@@ -384,6 +414,7 @@ final class DataProcessor {
   public function __construct(
     private readonly Connection $database,
     private readonly EntityTypeManagerInterface $entityTypeManager,
+    #[Autowire(service: 'logger.channel.my_module')]
     private readonly LoggerInterface $logger,
   ) {}
 
@@ -411,17 +442,9 @@ final class DataProcessor {
 }
 ```
 
-Register in `my_module.services.yml`. The logger channel service ID must match the one registered in §13 (`logger.channel.my_module`):
-
-```yaml
-services:
-  my_module.data_processor:
-    class: Drupal\my_module\Service\DataProcessor
-    arguments:
-      - '@database'
-      - '@entity_type.manager'
-      - '@logger.channel.my_module'
-```
+Autowiring resolves each constructor argument from its type. An argument whose type alone does not identify a
+service — a logger channel, a cache bin — names it with `#[Autowire(service: '…')]`; the logger channel itself is
+registered in §13. The class is fetched from the container by its name: `$container->get(DataProcessor::class)`.
 
 ---
 
@@ -456,7 +479,7 @@ final class MyForm extends FormBase {
    */
   public static function create(ContainerInterface $container): self {
     return new self(
-      $container->get('my_module.data_processor'),
+      $container->get(DataProcessor::class),
     );
   }
 
@@ -713,7 +736,7 @@ final class CustomBlock extends BlockBase implements ContainerFactoryPluginInter
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('my_module.data_processor'),
+      $container->get(DataProcessor::class),
     );
   }
 
@@ -729,6 +752,19 @@ final class CustomBlock extends BlockBase implements ContainerFactoryPluginInter
   }
 
 }
+```
+
+A plugin with settings (`defaultConfiguration()`) needs a schema entry in `config/schema/my_module.schema.yml`;
+config without schema fails validation and kernel tests:
+
+```yaml
+block.settings.my_module_custom_block:
+  type: block_settings
+  label: 'My custom block'
+  mapping:
+    items_per_page:
+      type: integer
+      label: 'Items per page'
 ```
 
 ---
@@ -795,6 +831,10 @@ if (!$this->currentUser()->hasPermission('my permission')) {
 
 ### Unit Tests
 
+Test metadata follows the PHPUnit version of the project's core: attributes (`#[CoversClass]`, `#[Group]`,
+`#[DataProvider]`) on Drupal 11 (PHPUnit 10+), docblock annotations (`@covers`, `@group`, `@dataProvider`) on
+Drupal 10 (PHPUnit 9). The example uses attributes.
+
 ```php
 <?php
 
@@ -806,14 +846,15 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\my_module\Service\DataProcessor;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 
 /**
  * Tests for DataProcessor service.
- *
- * @covers \Drupal\my_module\Service\DataProcessor
- * @group my_module
  */
+#[CoversClass(DataProcessor::class)]
+#[Group('my_module')]
 final class DataProcessorTest extends UnitTestCase {
 
   private DataProcessor $dataProcessor;
@@ -844,16 +885,18 @@ final class DataProcessorTest extends UnitTestCase {
 
 ### Running Tests
 
+Use the project's PHPUnit config (see `AGENTS.md`, "Testing"):
+
 ```bash
-vendor/bin/phpunit -c phpunit.xml
-vendor/bin/phpunit tests/src/Unit/Service/DataProcessorTest.php
+ddev exec vendor/bin/phpunit -c phpunit.xml.dist <webroot>/modules/custom/my_module
+ddev exec vendor/bin/phpunit -c phpunit.xml.dist --filter=DataProcessorTest
 ```
 
 ---
 
 ## 12. Caching
 
-Inject the cache backend (`@cache.default`) and the cache tags invalidator (`@cache_tags.invalidator`) rather than
+Inject the cache backend (`cache.default`) and the cache tags invalidator (`cache_tags.invalidator`) rather than
 using `\Drupal::` static calls. `CacheBackendInterface` has no `invalidateTags()` method — tag invalidation goes
 through the invalidator service.
 
@@ -866,6 +909,7 @@ namespace Drupal\my_module\Service;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Service demonstrating cache usage.
@@ -876,6 +920,7 @@ final class CacheService {
    * Constructor.
    */
   public function __construct(
+    #[Autowire(service: 'cache.default')]
     private readonly CacheBackendInterface $cache,
     private readonly CacheTagsInvalidatorInterface $cacheTagsInvalidator,
   ) {}
@@ -901,11 +946,8 @@ Register it in `my_module.services.yml`:
 
 ```yaml
 services:
-  my_module.cache_service:
-    class: Drupal\my_module\Service\CacheService
-    arguments:
-      - '@cache.default'
-      - '@cache_tags.invalidator'
+  Drupal\my_module\Service\CacheService:
+    autowire: true
 ```
 
 Cache in render arrays:
@@ -929,8 +971,8 @@ $this->logger->info('User @uid performed action', ['@uid' => $uid]);
 $this->logger->error('Error: @message', ['@message' => $e->getMessage()]);
 ```
 
-Register the logger channel in services. The service ID must be `logger.channel.my_module` to match the argument
-injected in §5:
+Register the logger channel in services. The service ID must be `logger.channel.my_module` to match the
+`#[Autowire]` attribute in §5:
 
 ```yaml
 services:
@@ -946,13 +988,18 @@ services:
 ```php
 // Read config via service.
 $config = $this->configFactory->get('my_module.settings');
-$value = $config->get('api_key');
+$value = $config->get('items_per_page');
 
 // Write config.
 $this->configFactory->getEditable('my_module.settings')
-  ->set('api_key', $new_value)
+  ->set('items_per_page', $new_value)
   ->save();
 ```
+
+Config is exported to `config/sync` and committed, so it holds settings only. API keys, passwords and tokens come
+from environment variables through `settings.php` (`$settings['my_module_api_key'] = getenv('MY_MODULE_API_KEY');`,
+read with `Settings::get()`), or from the Key module when the project uses it. Every config object has a schema in
+`config/schema/my_module.schema.yml`.
 
 ---
 

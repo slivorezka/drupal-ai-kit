@@ -1,0 +1,4 @@
+# Codex: run this skill only when invoked explicitly ($generate-agents-md),
+# like `disable-model-invocation: true` in SKILL.md does for Claude Code.
+policy:
+  allow_implicit_invocation: false

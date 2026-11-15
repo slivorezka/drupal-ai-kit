@@ -1,2 +1,7 @@
-# Claude Code subagent log.
+# Claude Code: subagent log and personal settings.
 .claude/agents.log
+.claude/settings.local.json
+
+# OS and IDE files.
+.DS_Store
+.idea/

@@ -1,7 +1,7 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in this repository (Codex, Claude Code and others).
-Codex reads this file automatically; Claude Code loads it through `.claude/CLAUDE.md`.
+Instructions for AI coding agents working in this repository (Codex, Claude Code, GitHub Copilot and others).
+Codex and Copilot read this file automatically; Claude Code loads it through `.claude/CLAUDE.md`.
 
 ## Project Overview
 
@@ -50,6 +50,7 @@ ddev exec vendor/bin/phpunit -c phpunit.xml.dist --filter=TestName  # Run single
 ```bash
 ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice <webroot>/modules/custom/
 ddev exec vendor/bin/phpcbf --standard=Drupal,DrupalPractice <webroot>/modules/custom/  # Auto-fix
+ddev exec vendor/bin/phpstan analyse <webroot>/modules/custom/                          # If the project has PHPStan
 ```
 
 ## Architecture
@@ -75,6 +76,9 @@ ddev exec vendor/bin/phpcbf --standard=Drupal,DrupalPractice <webroot>/modules/c
 - Use typed properties and return types everywhere
 - All classes, methods, and functions need PHPDoc blocks
 - Always use dependency injection — never `\Drupal::service()` in classes
+- Services are registered by class name with `autowire: true` and live in `src/Service/`
+- Hooks: OOP `#[Hook]` classes in `src/Hook/` on Drupal 11.1+ (preprocess hooks from 11.2), procedural in `.module`
+  on 10.x — check the installed core version first
 - Follow Drupal Coding Standards (see [`php.md`](.agents/instructions/php.md), [`drupal.md`](.agents/instructions/drupal.md))
 - Twig: logic-free templates, use preprocess functions (see [`twig.md`](.agents/instructions/twig.md))
 - JS: Drupal Behaviors with `once()`, scoped to component (see [`js.md`](.agents/instructions/js.md))
@@ -84,8 +88,9 @@ ddev exec vendor/bin/phpcbf --standard=Drupal,DrupalPractice <webroot>/modules/c
 Shared by every agent — read the guide for the area you touch before changing code:
 
 - Guides: [`.agents/instructions/`](.agents/instructions/) — `drupal.md`, `php.md`, `twig.md`, `js.md`, `git.md`.
-- Skills: [`.agents/skills/`](.agents/skills/) (source of truth; `.claude/skills/` is a copy for Claude Code) — `create-drupal-service`, `create-drupal-plugin`,
-  `drupal-performance-review`, `drupal-refactor-to-di`, `git-commit`, `drupal` (AGENTS.md generator, explicit use only).
+- Skills: [`.agents/skills/`](.agents/skills/) — `create-drupal-service`, `create-drupal-plugin`,
+  `drupal-performance-review`, `drupal-refactor-to-di`, `git-commit`, `generate-agents-md` (fills this file with the
+  project's real values; explicit use only).
 
 ### Safety
 
@@ -110,4 +115,5 @@ See [`git.md`](.agents/instructions/git.md) for full rules.
 
 - **Branch naming**: `<type>/<ticket-number>-<description>` (e.g., `feature/329-search-styling`)
 - **Commit format**: `#<TICKET>: <Description>.` — present tense imperative, max 72 chars, ends with period
-- Extract ticket number from branch name (e.g., branch `feature/329-foo` → commit `#329: Add foo.`)
+- Extract ticket number from branch name (e.g., branch `feature/329-foo` → commit `#329: Add foo.`); a branch
+  without a ticket number gets the same sentence without the prefix

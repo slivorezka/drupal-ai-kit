@@ -5,8 +5,9 @@
 - **Logic-free Templates**: Keep business logic in PHP (controllers, services, preprocess functions)
 - **Auto-escaping**: Output is escaped by default to prevent XSS
 - **Readability**: Clean, well-documented syntax
-- **Reusability**: Create components using include and extends
-- **Performance**: Templates are compiled to PHP for efficient execution
+- **Reusability**: Build components and reuse them with `include` and `embed`
+- **Formatting**: 2-space indentation; no space between a function or filter name and its parenthesis
+  (`attach_library('…')`, `|t({…})`)
 
 ---
 
@@ -18,15 +19,16 @@
 templates/
 ├── my-template.html.twig
 ├── my-template--variant.html.twig
-├── components/
-│   ├── card/
-│   │   └── card.html.twig
-│   ├── button/
-│   │   └── button.html.twig
-│   └── hero/
-│       └── hero.html.twig
 └── layouts/
     └── my-layout.html.twig
+components/
+├── card/
+│   ├── card.component.yml
+│   ├── card.twig
+│   └── card.css
+└── hero/
+    ├── hero.component.yml
+    └── hero.twig
 ```
 
 ### Naming Convention
@@ -82,46 +84,41 @@ final class ThemeHooks {
 ```twig
 {#
 /**
-
-* @file
-* Template for displaying a custom component.
-*
-* Available variables:
-*
-  - title (string): The component title.
-*
-  - items (array): List of items to display.
-*
-  - description (string): Component description.
-*
-* @ingroup themeable
-  */
-  #}
-
+ * @file
+ * Template for displaying a custom component.
+ *
+ * Available variables:
+ * - title (string): The component title.
+ * - items (array): List of items to display.
+ * - description (string): Component description.
+ *
+ * @ingroup themeable
+ */
+#}
 <div class="my-component">
   {% if title %}
     <h2 class="my-component__title">{{ title }}</h2>
   {% endif %}
 
-{% if description %}
-<p class="my-component__description">{{ description }}</p>
-{% endif %}
+  {% if description %}
+    <p class="my-component__description">{{ description }}</p>
+  {% endif %}
 
-{% if items %}
-<ul class="my-component__list">
-{% for item in items %}
-<li class="my-component__item">{{ item }}</li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="my-component__empty">{{ 'No items found'|t }}</p>
-{% endif %}
+  {% if items %}
+    <ul class="my-component__list">
+      {% for item in items %}
+        <li class="my-component__item">{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="my-component__empty">{{ 'No items found'|t }}</p>
+  {% endif %}
 </div>
 ```
 
 ### File Header Documentation
 
-Always include a documentation block:
+Every template starts with a documentation block listing its variables:
 
 ```twig
 {#
@@ -178,9 +175,9 @@ instead:
 
 ```twig
 {{ html_content|striptags }}
-<a href="{{ path('route.name', {'id': item.id}) }}">Link</a>
-<a href="?q={{ query_value|escape('url') }}">Filtered</a>   {# escape ('url') on a component only #}
-<div data-title="{{ title|escape('html_attr') }}">
+<a href="{{ path('route.name', {'id': item.id}) }}">{{ 'Details'|t }}</a>
+<a href="?q={{ query_value|escape('url') }}">{{ 'Filtered'|t }}</a> {# escape('url') on a component only #}
+<div data-title="{{ title|escape('html_attr') }}"></div>
 ```
 
 ---
@@ -189,25 +186,25 @@ instead:
 
 ```twig
 {% if is_active %}
-<span class="badge badge--active">Active</span>
+  <span class="badge badge--active">{{ 'Active'|t }}</span>
 {% endif %}
 
-{% if user.isAuthenticated %}
-  <p>Welcome, {{ user.name }}</p>
+{% if logged_in %}
+  <p>{{ 'Welcome, @name'|t({'@name': user_name}) }}</p>
 {% else %}
-  <p><a href="/login">Login</a></p>
+  <p><a href="{{ path('user.login') }}">{{ 'Log in'|t }}</a></p>
 {% endif %}
 
 {% if status == 'published' %}
-<span>Published</span>
+  <span>{{ 'Published'|t }}</span>
 {% elseif status == 'draft' %}
-<span>Draft</span>
+  <span>{{ 'Draft'|t }}</span>
 {% else %}
-<span>Archived</span>
+  <span>{{ 'Archived'|t }}</span>
 {% endif %}
 
 {# Null coalescing #}
-{{ title ?? 'Untitled' }}
+{{ title ?? 'Untitled'|t }}
 ```
 
 ---
@@ -222,13 +219,13 @@ instead:
 {% endfor %}
 
 {# Loop variables #}
-{% for item in items %}
-{% if loop.first %}<ul>{% endif %}
-  <li class="{% if loop.even %}even{% else %}odd{% endif %}">
-    {{ loop.index }} of {{ loop.length }}: {{ item }}
-  </li>
-  {% if loop.last %}</ul>{% endif %}
-{% endfor %}
+<ul>
+  {% for item in items %}
+    <li class="{{ loop.index is even ? 'even' : 'odd' }}">
+      {{ loop.index }} / {{ loop.length }}: {{ item }}
+    </li>
+  {% endfor %}
+</ul>
 ```
 
 ---
@@ -239,84 +236,114 @@ instead:
 
 ```twig
 {{ 'Hello World'|t }}
-{{ 'Hello @name'|t ({'@name': user.name}) }}
+{{ 'Hello @name'|t({'@name': user_name}) }}
 
 {% trans %}
-You have 1 item.
+  You have 1 item.
 {% plural count %}
-You have @count items.
+  You have {{ count }} items.
 {% endtrans %}
 ```
 
 ### Attributes Object
 
 ```twig
-<div{{ attributes }}>
-<div{{ attributes.addClass ('my-class') }}>
-<div{{ attributes.setAttribute ('data-id', item.id) }}>
+<div{{ attributes }}></div>
+<div{{ attributes.addClass('my-class') }}></div>
+<div{{ attributes.setAttribute('data-id', item.id) }}></div>
 ```
 
 ### Link Generation
 
 ```twig
-{{ link (title, url) }}
-<a href="{{ path('route.name', {'id': item.id}) }}">Link</a>
-<a href="{{ url('route.name', {'id': item.id}) }}">Link</a>
+{{ link(title, url) }}
+<a href="{{ path('route.name', {'id': item.id}) }}">{{ title }}</a>
+<a href="{{ url('route.name', {'id': item.id}) }}">{{ title }}</a>
 ```
 
 ### Attach Libraries
 
 ```twig
-{{ attach_library ('my_module/my_library') }}
+{{ attach_library('my_module/my_library') }}
 ```
 
 ---
 
 ## 8. Template Inheritance
 
-### Base Template
+Extend a template of the theme or its base theme by namespace and override only the blocks that change:
 
 ```twig
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{% block title %}My Site{% endblock %}</title>
-</head>
-<body>
-  <header>{% block header %}{% endblock %}</header>
-  <main>{% block content %}{% endblock %}</main>
-  <footer>{% block footer %}{% endblock %}</footer>
-</body>
-</html>
-```
-
-### Extending
-
-```twig
-{% extends "base.html.twig" %}
-
-{% block title %}Page Title{% endblock %}
+{# node--article.html.twig #}
+{% extends '@my_theme/node.html.twig' %}
 
 {% block content %}
-  <h1>{{ page_title }}</h1>
+  <div class="article__lead">{{ content.field_lead }}</div>
+  {{ parent() }}
 {% endblock %}
+```
+
+The parent template declares the blocks:
+
+```twig
+<article{{ attributes }}>
+  {% block content %}
+    {{ content }}
+  {% endblock %}
+</article>
 ```
 
 ---
 
-## 9. Template Includes
+## 9. Components and Includes
+
+### Single Directory Components
+
+Reusable UI lives in Single Directory Components (core since Drupal 10.3): one folder per component under
+`components/` of a theme or module, holding `<name>.component.yml` (props and slots), `<name>.twig` and optional
+`<name>.css` / `<name>.js`, which Drupal attaches automatically.
+
+```yaml
+# components/card/card.component.yml
+name: Card
+props:
+  type: object
+  required:
+    - title
+  properties:
+    title:
+      type: string
+    featured:
+      type: boolean
+slots:
+  body:
+    title: Body
+```
 
 ```twig
-{% include 'components/card.html.twig' with {
-'title': item.title,
-'image': item.image,
-} only %}
+{# Props only. #}
+{{ include('my_theme:card', {title: item.title, featured: item.is_featured}, with_context = false) }}
 
-{# Dynamic include with fallback #}
-{% include [
-'components/' ~ component_type ~ '.html.twig',
-'components/default.html.twig',
-] %}
+{# Props and slots. #}
+{% embed 'my_theme:card' with {title: item.title} only %}
+  {% block body %}
+    {{ content.field_body }}
+  {% endblock %}
+{% endembed %}
+```
+
+Look for an existing component before writing markup; paragraph and field templates call components instead of
+repeating their HTML.
+
+### Plain Includes
+
+A project without SDC includes partial templates by theme namespace and passes only what the partial needs:
+
+```twig
+{% include '@my_theme/partials/card.html.twig' with {
+  title: item.title,
+  image: item.image,
+} only %}
 ```
 
 ---
@@ -326,24 +353,30 @@ You have @count items.
 ```twig
 <div class="card">                            {# Block #}
   <div class="card__header">                  {# Element #}
-    <h2 class="card__title">Title</h2>
+    <h2 class="card__title">{{ title }}</h2>
   </div>
   <div class="card__footer">
-    <button class="card__button card__button--primary">Action</button>
+    <button class="card__button card__button--primary">{{ 'Action'|t }}</button> {# Modifier #}
   </div>
 </div>
 
 {# Dynamic classes #}
-{% set classes = ['card'] %}
-{% if is_featured %}{% set classes = classes|merge (['card--featured']) %}{% endif %}
-<div class="{{ classes|join(' ') }}">
+{%
+  set classes = [
+    'card',
+    is_featured ? 'card--featured',
+  ]
+%}
+<div{{ attributes.addClass(classes) }}></div>
 ```
 
 ---
 
 ## 11. Preprocessing
 
-Always prepare data in PHP, not in templates:
+Always prepare data in PHP, not in templates. OOP preprocess hooks need Drupal 11.2+; on 11.1 and 10.x write the
+same logic as a procedural `my_module_preprocess_my_component()` in `my_module.module`, and in a theme as
+`my_theme_preprocess_my_component()` in `my_theme.theme`:
 
 ```php
 <?php
@@ -383,14 +416,19 @@ final class PreprocessHooks {
 {{ content }}
 {{ content.field_body }}
 
-{% if content.field_body %}
+{% if content.field_body|render|trim %}
   <div class="body">{{ content.field_body }}</div>
 {% endif %}
 
 <article{{ attributes }}>
-{{ content }}
+  {{ content.field_image }}
+  {{ content|without('field_image') }}
 </article>
 ```
+
+Render arrays carry cache metadata (tags, contexts, max-age). A template that prints single fields still prints
+the rest with `{{ content|without(…) }}`, so that metadata reaches the page; raw values read from the entity
+(`node.field_x.value`) bypass it.
 
 ---
 
@@ -398,7 +436,7 @@ final class PreprocessHooks {
 
 ```twig
 {# ✅ SAFE: Auto-escaped #}
-{{ user.name }}
+{{ user_name }}
 {{ form.element }}
 {{ content }}
 
@@ -414,19 +452,19 @@ final class PreprocessHooks {
 ## 14. Performance
 
 ```twig
-{# Don't process if not needed #}
+{# Render a part only when it is shown #}
 {% if should_show_sidebar %}
-{% include 'sidebar.html.twig' %}
+  {{ include('my_theme:sidebar', {items: sidebar_items}, with_context = false) }}
 {% endif %}
 
-{# ❌ Complex logic in a template #}
+{# ❌ Filtering in a template #}
 {% for item in items %}
-{% if item.status == 'active' and item.user.role == 'admin' %}
-...
-{% endif %}
+  {% if item.status == 'active' and item.user.role == 'admin' %}
+    <li>{{ item.title }}</li>
+  {% endif %}
 {% endfor %}
 
-{# ✅ Process in PHP preprocess #}
+{# ✅ Filtered in PHP preprocess #}
 {% for item in filtered_items %}
   <li>{{ item.title }}</li>
 {% endfor %}
@@ -436,41 +474,46 @@ final class PreprocessHooks {
 
 ## 15. Debugging
 
+`dump()` works when Twig debug is on (`/admin/config/development/settings` or `twig.config: debug: true` in
+`development.services.yml`). Remove it before committing.
+
 ```twig
-{{ dump () }}
-{{ dump (my_variable) }}
+{{ dump() }}
+{{ dump(my_variable) }}
 
 {# List available variables #}
-{% for key in _context|keys %}{{ key }}{% if not loop.last %}, {% endif %}{% endfor %}
+{{ dump(_context|keys) }}
 ```
 
 ---
 
 ## 16. Common Gotchas
 
-### Variable Undefined Error
+### Undefined Variables
+
+Drupal runs Twig with `strict_variables` off: an undefined variable prints nothing and raises no error, so a typo
+in a variable name fails silently. Give optional variables a default or test them:
 
 ```twig
-{# ❌ Error if undefined #}
-{{ my_var }}
+{{ my_var|default('No value'|t) }}
 
-{# ✅ Safe with default #}
-{{ my_var|default ('No value') }}
-
-{# ✅ Check existence #}
-{% if my_var is defined %}
-{{ my_var }}
+{% if my_var is defined and my_var is not empty %}
+  {{ my_var }}
 {% endif %}
 ```
+
+### Empty Render Arrays
+
+`{% if content.field_x %}` is true for a field that renders nothing, because the render array itself is not empty.
+Test the rendered output — `{% if content.field_x|render|trim %}` — or pass a boolean from preprocess.
 
 ### Loop Variable Scope
 
 ```twig
-{# ❌ loop variable only available inside loop #}
-{% for item in items %}{{ item }}{% endfor %}
-{# loop.index not available here #}
+{# The loop variable exists only inside the loop #}
+{% for item in items %}{{ loop.index }}{% endfor %}
 
-{# ✅ Use set for values needed outside loop #}
+{# Values needed outside the loop are set outside #}
 {% set item_count = items|length %}
 ```
 
@@ -482,11 +525,11 @@ final class PreprocessHooks {
 - [ ] All variables are documented
 - [ ] Output is auto-escaped (only `|raw` for safe content)
 - [ ] No business logic in templates
+- [ ] Existing component reused before new markup is written
 - [ ] Semantic HTML used
 - [ ] BEM class naming
 - [ ] Data processed in preprocess functions
-- [ ] Proper caching implemented
-- [ ] User input escaped
+- [ ] Cache metadata preserved (`content` or `content|without(…)` is printed)
+- [ ] Strings translated with `|t` / `{% trans %}`
 - [ ] ARIA labels where needed
-- [ ] Consistent 2-space indentation
-
+- [ ] 2-space indentation, no space before `(`

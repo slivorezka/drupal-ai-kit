@@ -1,157 +1,112 @@
 ---
 name: drupal-refactor-to-di
-description: Refactor Drupal code from static Drupal:: calls to dependency injection
-argument-hint: <file path or code>
+description: Refactor Drupal code from static \Drupal:: calls to dependency injection
+argument-hint: <file or directory>
 ---
 
-You are a Drupal 10/11 refactoring expert. Refactor the provided code to use proper dependency injection, replacing all
-static service calls (`\Drupal::service()`, `\Drupal::database()`, etc.) with modern DI patterns following PHP 8.3+ and
-Drupal 10/11 best practices.
+Refactor this code to dependency injection: $ARGUMENTS
 
-Analyze and refactor the following code or file: $ARGUMENTS
+The target rules are in `.agents/instructions/drupal.md` §3 and §5 and `.agents/instructions/php.md` §5; read them
+first. This skill is the procedure.
 
-If a file path is provided, read the file and refactor it. If code is provided directly, refactor it in place.
+## Steps
 
-## Refactoring Goals
+1. **List the static calls.** `grep -n '\\Drupal::' <target>` — every hit inside a class is in scope. Hits in
+   `.module`, `.install` and `.theme` files are handled by the "Procedural code" branch below.
 
-1. **Remove all static calls**: Eliminate `\Drupal::service()`, `\Drupal::database()`, `\Drupal::config()`,
-   `\Drupal::entityTypeManager()`, `\Drupal::currentUser()`, `\Drupal::logger()`, etc.
-2. **Add constructor DI**: Inject all dependencies via the constructor with `private readonly` typed properties
-3. **Add `create()` method**: For classes instantiated by the container (controllers, forms, plugins)
-4. **Add type hints**: Strict typing on all parameters and return types
-5. **Add PHPDoc**: Comprehensive documentation
-6. **Create/update services.yml**: Service registration if needed
+2. **Map each call to a service and an interface.**
 
-## Static Call → Service Mapping
+   | Static call                       | Service                       | Type-hint                    |
+   |-----------------------------------|-------------------------------|------------------------------|
+   | `\Drupal::database()`             | `database`                    | `Connection`                 |
+   | `\Drupal::config()`, `configFactory()` | `config.factory`         | `ConfigFactoryInterface`     |
+   | `\Drupal::entityTypeManager()`    | `entity_type.manager`         | `EntityTypeManagerInterface` |
+   | `\Drupal::currentUser()`          | `current_user`                | `AccountProxyInterface`      |
+   | `\Drupal::moduleHandler()`        | `module_handler`              | `ModuleHandlerInterface`     |
+   | `\Drupal::logger('x')`            | `logger.channel.<module>`     | `LoggerInterface`            |
+   | `\Drupal::state()`                | `state`                       | `StateInterface`             |
+   | `\Drupal::cache()`                | `cache.default`               | `CacheBackendInterface`      |
+   | `\Drupal::httpClient()`           | `http_client`                 | `ClientInterface`            |
+   | `\Drupal::messenger()`            | `messenger`                   | `MessengerInterface`         |
+   | `\Drupal::formBuilder()`          | `form_builder`                | `FormBuilderInterface`       |
+   | `\Drupal::time()`                 | `datetime.time`               | `TimeInterface`              |
+   | `\Drupal::languageManager()`      | `language_manager`            | `LanguageManagerInterface`   |
+   | `\Drupal::service('x')`           | `x`                           | the interface of `x`         |
 
-```
-\Drupal::database()           → @database (Connection)
-\Drupal::config()             → @config.factory (ConfigFactoryInterface)
-\Drupal::configFactory()      → @config.factory (ConfigFactoryInterface)
-\Drupal::entityTypeManager()  → @entity_type.manager (EntityTypeManagerInterface)
-\Drupal::currentUser()        → @current_user (AccountProxyInterface)
-\Drupal::moduleHandler()      → @module_handler (ModuleHandlerInterface)
-\Drupal::logger()             → @logger.channel.{module} (LoggerInterface)
-\Drupal::state()              → @state (StateInterface)
-\Drupal::cache()              → @cache.default (CacheBackendInterface)
-\Drupal::httpClient()         → @http_client (ClientInterface)
-\Drupal::service('messenger') → @messenger (MessengerInterface)
-\Drupal::formBuilder()        → @form_builder (FormBuilderInterface)
-```
+3. **Inject by class kind.**
 
-## Refactoring Patterns
+   - **Service** — promoted `private readonly` constructor parameters; registered by class name with
+     `autowire: true`. Update the existing `services.yml` entry instead of adding a second one.
+   - **Controller, form** — constructor plus static `create(ContainerInterface $container): self`.
+   - **Plugin** — implement `ContainerFactoryPluginInterface`; the constructor takes the base class's constructor
+     arguments followed by the services and calls `parent::__construct()` first; static `create()` receives the
+     container and the same base arguments.
+   - **Hook class in `src/Hook/`** — constructor only; these classes are autowired services with no `create()` and
+     no `services.yml` entry.
 
-### Pattern: Controller
+   **Inherited properties.** `ControllerBase`, `FormBase` and `PluginBase` already declare properties such as
+   `$entityTypeManager`, `$currentUser`, `$configFactory` and `$messenger`; promoting a constructor parameter with
+   the same name is a fatal error. Inject under a name the base class does not use — the list and the rule are in
+   `drupal.md` §5, "Inherited properties".
 
-- Extend `ControllerBase`
-- Add constructor with DI
-- Add `create()` static method
-- Replace all `\Drupal::` calls with `$this->property`
+4. **Procedural code** (`.module`, `.install`, `.theme`) has no constructor.
+   - Drupal 11.2+: move each hook to a `#[Hook]` method on a class in `src/Hook/` and delete the function.
+   - Drupal 11.1: the same, except preprocess hooks, which stay procedural.
+   - Drupal 10.x, install-time hooks on every version, and `<theme>.theme` functions: keep the function as a thin
+     wrapper that fetches one service with `\Drupal::service()` and delegates to it. Static calls are accepted
+     there and nowhere else.
 
-### Pattern: Form
+   ```php
+   <?php
 
-- Extend `FormBase` or `ConfigFormBase`
-- Add constructor with DI
-- Add `create()` static method
+   declare(strict_types=1);
 
-### Pattern: Plugin (Block, etc.)
+   namespace Drupal\my_module\Hook;
 
-- Implement `ContainerFactoryPluginInterface`
-- Constructor: `(array $configuration, string $plugin_id, mixed $plugin_definition, ...services)`
-- Call `parent::__construct($configuration, $plugin_id, $plugin_definition)` first
-- Add `create()` with container + plugin params
+   use Drupal\Core\Hook\Attribute\Hook;
+   use Drupal\my_module\Service\NodeService;
+   use Drupal\node\NodeInterface;
 
-### Pattern: Service
+   /**
+    * Node hook implementations for my_module.
+    */
+   final class NodeHooks {
 
-- Pure constructor DI (no `create()` method needed)
-- Register in `*.services.yml`
+     /**
+      * Constructor.
+      */
+     public function __construct(
+       private readonly NodeService $nodeService,
+     ) {}
 
-### Pattern: Procedural Hook → OOP Hook Class
+     /**
+      * Implements hook_ENTITY_TYPE_insert() for nodes.
+      */
+     #[Hook('node_insert')]
+     public function nodeInsert(NodeInterface $node): void {
+       $this->nodeService->onNodeInsert($node);
+     }
 
-Procedural hooks in `.module` files cannot use constructor injection. Move them to a class in `src/Hook/` with the
-`#[Hook]` attribute (Drupal 11.1+ only — on Drupal 10.x keep the procedural hook as a thin wrapper that only fetches a service with
-`\Drupal::service()` and delegates to it; static calls are tolerated in `.module` files, never in classes). Classes in `src/Hook/` are registered as autowired services automatically, so
-dependencies are injected via the constructor with no `create()` method and no `services.yml` entry.
+   }
+   ```
 
-```php
-<?php
+5. **Update the tests** of every changed class: constructor arguments changed, so mocks must be passed in.
 
-declare(strict_types=1);
+6. **Verify.**
 
-namespace Drupal\my_module\Hook;
+   ```bash
+   grep -n '\\Drupal::' <changed class files>      # expect no output
+   ddev drush cr
+   ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice <changed files>
+   ddev exec vendor/bin/phpunit <tests of the changed classes>
+   ```
 
-use Drupal\Core\Hook\Attribute\Hook;
-use Drupal\my_module\NodeService;
-use Drupal\node\NodeInterface;
+   Then load one page or run one Drush command that exercises the changed code.
 
-/**
- * Node hook implementations for my_module.
- */
-final class NodeHooks {
+Done when no `\Drupal::` call is left in a class, the cache rebuild succeeds (the container compiles), `phpcs`
+reports nothing and the tests pass.
 
-  /**
-   * Constructor.
-   */
-  public function __construct(
-    private readonly NodeService $nodeService,
-  ) {}
+## Report
 
-  /**
-   * Implements hook_ENTITY_TYPE_insert() for nodes.
-   */
-  #[Hook('node_insert')]
-  public function nodeInsert(NodeInterface $node): void {
-    $this->nodeService->onNodeInsert($node);
-  }
-
-}
-```
-
-Delete the procedural function afterward. Use `#[Hook]` classes in the module's `src/Hook/` directory.
-
-## Output Requirements
-
-Generate all of the following:
-
-1. **Refactored PHP File** — Complete file with:
-
-- `declare(strict_types=1);`
-- A proper namespace and imports
-- Constructor with `private readonly` dependencies
-- `create()` method (if applicable)
-- All static calls are replaced with `$this->property`
-- Comprehensive PHPDoc blocks
-
-2. **Services.yml Entry** — If a new service is created:
-
-```yaml
-services:
-  {my_module}.{service_name}:
-    class: Drupal\{my_module}\Service\{ServiceName}
-    arguments:
-      - '@dependency1'
-      - '@dependency2'
-```
-
-3. **Migration Notes** — Steps to integrate:
-
-- Files changed
-- Services added
-- Tests to update
-- Caches to clear
-
-4. **Before/After Summary** — What changed and why
-
-## Validation Checklist
-
-- [ ] All `\Drupal::` static calls are removed from classes
-- [ ] All dependencies are injected via constructor
-- [ ] All properties are `private readonly`
-- [ ] All parameters and return types have type hints
-- [ ] PHPDoc blocks are present and accurate
-- [ ] `create()` method implemented (for plugins/forms/controllers)
-- [ ] Services registered in services.yml
-- [ ] No circular dependencies introduced
-- [ ] Backward compatibility maintained
-- [ ] Code follows Drupal coding standards
-
+Files changed, services added or re-registered, static calls deliberately left in procedural code and why, and the
+result of each verify command.

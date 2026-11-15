@@ -1,8 +1,8 @@
-# JavaScript Instructions for Drupal 10
+# JavaScript Instructions for Drupal 10/11
 
 ## Purpose
 
-Rules for all JavaScript in this Drupal 10 repository to keep behavior consistent, secure, and maintainable.
+Rules for all JavaScript in this Drupal repository to keep behavior consistent, secure, and maintainable.
 
 ---
 

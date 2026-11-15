@@ -1,4 +1,5 @@
-# Codex counterpart of .claude/agents/drupal-ops.md — keep both in sync.
+# Generated from .claude/agents/drupal-ops.md by .agents/sync.sh: edit that file, then run the script.
+# Lines above `developer_instructions` other than `description` are Codex-only and kept as they are.
 name = "drupal-ops"
 description = "Configuration, environments and deployment — config/sync, settings*.php and services*.yml, DDEV, the CI/CD pipeline, production issues (status report, caching, reverse proxy/CDN, Redis, permissions, sitemap, cron). Use PROACTIVELY when a deploy or CI job fails, when config import/export shows drift, or when the site misbehaves in an environment: it reads the long logs and returns only the diagnosis and fix."
 developer_instructions = '''
