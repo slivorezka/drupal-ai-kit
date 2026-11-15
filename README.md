@@ -42,7 +42,8 @@ to `.gitignore` and installs the named tools. Commit `AGENTS.md`, `.ai-kit/` and
 `composer update`, run `vendor/bin/drupal-ai-kit update`: it refreshes `.ai-kit/` and the installed tools and never
 touches `AGENTS.md`, so keep project rules there, not in `.ai-kit/`.
 
-**Claude Code plugin** — only the skills and subagents, without `AGENTS.md` and the topic guides:
+**Claude plugin** — the skills and subagents with their topic guides, without `AGENTS.md`, Codex and Copilot; works in
+Claude Code, Cowork and the Claude apps. Details in [plugin/README.md](plugin/README.md):
 
 ```
 /plugin marketplace add slivorezka/drupal-ai-kit
@@ -99,7 +100,9 @@ AGENTS.md            # Shared project rules, read in place by every tool
 │   └── copilot/     #   -> .github/   pointers to AGENTS.md, the guides and the skills
 └── install.sh       # Generates the settings of a tool from everything above
 bin/drupal-ai-kit    # Composer entry point: copies the kit into a project, runs install.sh
-.claude-plugin/      # Claude Code plugin and marketplace manifests
+.claude-plugin/      # Marketplace manifest: points to plugin/
+plugin/              # Claude plugin, built from .ai-kit/ by scripts/build-plugin.sh
+scripts/             # Kit maintenance: build-plugin.sh
 composer.json        # Composer package slivorezka/drupal-ai-kit
 CHANGELOG.md
 ```

@@ -1034,9 +1034,9 @@ $this->configFactory->getEditable('my_module.settings')
   ->save();
 ```
 
-Config is exported to `config/sync` and committed, so it holds settings only. API keys, passwords and tokens come
-from environment variables, which `settings.php` copies into `$settings` (read them with `Settings::get()`), or from
-the Key module when the project uses it. Every config object has a schema in
+Config is exported to `config/sync` and committed, so it holds settings only. Secret values never go into config:
+`settings.php` provides them per environment (read them with `Settings::get()`), or the Key module does when the
+project uses it. Every config object has a schema in
 `config/schema/my_module.schema.yml`.
 
 ---

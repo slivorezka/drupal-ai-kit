@@ -1,0 +1,16 @@
+{
+  "name": "drupal-ai-kit",
+  "displayName": "Drupal AI Kit",
+  "version": "1.1.0",
+  "description": "Drupal 10/11 skills and role-based subagents: back end, theme and front end, e2e tests, ops, SEO and code review.",
+  "author": {
+    "name": "Andrii Malieiev",
+    "url": "https://github.com/slivorezka"
+  },
+  "homepage": "https://github.com/slivorezka/drupal-ai-kit",
+  "repository": "https://github.com/slivorezka/drupal-ai-kit",
+  "documentationUrl": "https://github.com/slivorezka/drupal-ai-kit/blob/main/plugin/README.md",
+  "supportUrl": "https://github.com/slivorezka/drupal-ai-kit/issues",
+  "license": "MIT",
+  "keywords": ["drupal", "drupal-11", "skills", "subagents", "agents-md"]
+}

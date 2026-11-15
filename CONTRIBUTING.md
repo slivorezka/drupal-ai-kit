@@ -7,7 +7,8 @@ Thanks for helping to improve Drupal AI Kit. Questions and ideas go to
 ## Ground rules
 
 - **One source.** Every rule, skill and subagent lives once in `AGENTS.md` or `.ai-kit/`. Never edit the generated
-  copies in `.claude/`, `.codex/`, `.agents/skills/` or `.github/`: `.ai-kit/install.sh` overwrites them.
+  copies in `.claude/`, `.codex/`, `.agents/skills/`, `.github/` or `plugin/`: `.ai-kit/install.sh` and
+  `scripts/build-plugin.sh` overwrite them.
 - **Tool-neutral first.** Write for every assistant. Put a file in `.ai-kit/tools/<tool>/` only when one tool needs it.
 - **Drupal 10.3+ and 11, PHP 8.3+.** Code examples follow the guides in `.ai-kit/instructions/`: dependency
   injection instead of `\Drupal::`, OOP hooks (`#[Hook]`) for Drupal 11.2+, two-space indentation, no secrets in
@@ -41,7 +42,9 @@ Run `.ai-kit/install.sh` again after every change in `.ai-kit/`.
    copied to Claude Code.
 4. To offer it as a Copilot prompt, add `.ai-kit/tools/copilot/prompts/<name>.prompt.md` that points to the
    skill — copy an existing prompt file.
-5. Add it to the Skills table in `README.md` and to `CHANGELOG.md` under `[Unreleased]`.
+5. Run `scripts/build-plugin.sh` to copy it into the Claude plugin in `plugin/`. A skill that needs the full kit in
+   the project (as `generate-agents-md` does) goes into `kit_only` in that script instead.
+6. Add it to the Skills tables in `README.md` and `plugin/README.md`, and to `CHANGELOG.md` under `[Unreleased]`.
 
 ## Add a subagent
 
@@ -59,8 +62,8 @@ Run `.ai-kit/install.sh` again after every change in `.ai-kit/`.
    ```
 
    `codex: |` is optional: TOML lines for Codex only, without blank lines. The body must not contain `'''`.
-2. Add `"./.ai-kit/agents/<name>.md"` to `agents` in `.claude-plugin/plugin.json` — CI fails without it.
-3. Add it to the Subagents tables in `README.md` and `AGENTS.md`, and to `CHANGELOG.md`.
+2. Run `scripts/build-plugin.sh` to copy it into the Claude plugin in `plugin/` — CI fails when `plugin/` is out of date.
+3. Add it to the Subagents tables in `README.md`, `plugin/README.md` and `AGENTS.md`, and to `CHANGELOG.md`.
 
 ## Add a tool
 
@@ -71,8 +74,9 @@ if something has to be generated. Add the tool to `README.md` (Supported Tools) 
 ## Check before a pull request
 
 ```bash
-shellcheck .ai-kit/install.sh bin/drupal-ai-kit
+shellcheck .ai-kit/install.sh bin/drupal-ai-kit scripts/build-plugin.sh
 composer validate --strict
+scripts/build-plugin.sh && git status --short plugin   # must print nothing new
 claude plugin validate --strict .
 .ai-kit/install.sh --all && .ai-kit/install.sh --remove claude codex copilot
 ```
@@ -87,5 +91,5 @@ CI runs the same checks and an install smoke test.
 
 ## Releases
 
-The maintainer releases: update `CHANGELOG.md`, raise `version` in `.claude-plugin/plugin.json`, tag `vX.Y.Z`.
+The maintainer releases: update `CHANGELOG.md`, raise `version` in `plugin/.claude-plugin/plugin.json`, tag `vX.Y.Z`.
 CI fails a tag whose version differs from `plugin.json`. Packagist picks the tag up by itself.

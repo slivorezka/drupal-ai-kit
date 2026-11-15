@@ -7,8 +7,8 @@
   "plugins": [
     {
       "name": "drupal-ai-kit",
-      "source": "./",
-      "description": "Drupal 10/11 skills and role-based subagents: backend, theme, e2e, ops, SEO, code review."
+      "source": "./plugin",
+      "description": "Drupal 10/11 skills and role-based subagents: back end, theme and front end, e2e tests, ops, SEO and code review."
     }
   ]
 }

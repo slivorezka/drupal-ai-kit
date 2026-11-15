@@ -12,6 +12,9 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Changed
 
+- The Claude plugin moves to `plugin/` and is built from `.ai-kit/` by `scripts/build-plugin.sh`: only skills,
+  subagents and topic guides, so it installs in Claude Code, Cowork and the Claude apps. `generate-agents-md` stays
+  in the full kit. The plugin is version 1.1.0.
 - Remove the `export-ignore` rules from `.gitattributes`: the Claude plugin directory refuses repositories whose
   archive differs from the repository.
 - `generate-agents-md` points to `vendor/bin/drupal-ai-kit init` when `AGENTS.md` is missing.
