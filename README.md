@@ -8,7 +8,7 @@ A ready-to-use set of AI coding assistant configurations for Drupal 10/11 projec
 **Codex** and **Claude Code** the same project rules, coding standards, reusable skills and specialised subagents, so
 every assistant on the team writes Drupal code the same way.
 
-![Install the kit with Composer and let the agent create a Drupal service](docs/media/demo.gif)
+![Install the kit with Composer and let the agent create a Drupal service](https://raw.githubusercontent.com/slivorezka/drupal-ai-kit/main/docs/media/demo.gif)
 
 ## Why
 
