@@ -19,10 +19,10 @@ jobs:
 
       - name: Settings and agent files parse
         run: |
-          jq empty .claude/settings.json
+          if [ -f .claude/settings.json ]; then jq empty .claude/settings.json; fi
           python3 -c "
           import glob, tomllib
-          for path in ['.codex/config.toml', *glob.glob('.codex/agents/*.toml')]:
+          for path in glob.glob('.codex/config.toml') + glob.glob('.codex/agents/*.toml'):
               tomllib.load(open(path, 'rb'))
           "
 

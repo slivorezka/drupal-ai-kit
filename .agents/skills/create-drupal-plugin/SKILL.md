@@ -17,20 +17,21 @@ first. This skill is the procedure.
 1. **Find the plugin type's contract in core**, not from memory: its attribute class, base class and directory.
    Open an existing core plugin of the same type and copy its shape.
 
-   | Type            | Attribute                                   | Base class      | Directory                         |
-   |-----------------|---------------------------------------------|-----------------|-----------------------------------|
-   | Block           | `Drupal\Core\Block\Attribute\Block`         | `BlockBase`     | `src/Plugin/Block/`               |
-   | Field widget    | `Drupal\Core\Field\Attribute\FieldWidget`   | `WidgetBase`    | `src/Plugin/Field/FieldWidget/`   |
-   | Field formatter | `Drupal\Core\Field\Attribute\FieldFormatter`| `FormatterBase` | `src/Plugin/Field/FieldFormatter/`|
-   | Condition       | `Drupal\Core\Condition\Attribute\Condition` | `ConditionPluginBase` | `src/Plugin/Condition/`     |
-   | Queue worker    | `Drupal\Core\Queue\Attribute\QueueWorker`   | `QueueWorkerBase` | `src/Plugin/QueueWorker/`       |
+   | Type            | Attribute                                    | Base class            | Directory                          |
+   |-----------------|----------------------------------------------|-----------------------|------------------------------------|
+   | Block           | `Drupal\Core\Block\Attribute\Block`          | `BlockBase`           | `src/Plugin/Block/`                |
+   | Field widget    | `Drupal\Core\Field\Attribute\FieldWidget`    | `WidgetBase`          | `src/Plugin/Field/FieldWidget/`    |
+   | Field formatter | `Drupal\Core\Field\Attribute\FieldFormatter` | `FormatterBase`       | `src/Plugin/Field/FieldFormatter/` |
+   | Condition       | `Drupal\Core\Condition\Attribute\Condition`  | `ConditionPluginBase` | `src/Plugin/Condition/`            |
+   | Queue worker    | `Drupal\Core\Queue\Attribute\QueueWorker`    | `QueueWorkerBase`     | `src/Plugin/QueueWorker/`          |
 
    Any other type: locate its plugin manager (`grep -r "DefaultPluginManager" <webroot>/core <webroot>/modules`) and
    read the attribute and subdirectory from the manager's constructor.
 
 2. **Write the class** in that directory:
-   - a PHP attribute directly above the class, labels as `new TranslatableMarkup('…')`. Drupal 10.2+ discovers
-     plugins by attribute; write a docblock annotation only when the type has no attribute class yet;
+   - a PHP attribute directly above the class, labels as `new TranslatableMarkup('…')`. Core plugin types are
+     discovered by attribute on Drupal 10.3+; write a docblock annotation only when the type has no attribute class
+     yet;
    - `final`, extending the type's base class and implementing every abstract method;
    - services through `ContainerFactoryPluginInterface`: the constructor takes the base class's own constructor
      arguments followed by the services and passes the former to `parent::__construct()`; a static `create()` builds

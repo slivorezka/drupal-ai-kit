@@ -375,8 +375,8 @@ A project without SDC includes partial templates by theme namespace and passes o
 ## 11. Preprocessing
 
 Always prepare data in PHP, not in templates. OOP preprocess hooks need Drupal 11.2+; on 11.1 and 10.x write the
-same logic as a procedural `my_module_preprocess_my_component()` in `my_module.module`, and in a theme as
-`my_theme_preprocess_my_component()` in `my_theme.theme`:
+same logic as a procedural `my_module_preprocess_my_template()` in `my_module.module`, and in a theme as
+`my_theme_preprocess_my_template()` in `my_theme.theme`:
 
 ```php
 <?php
@@ -393,10 +393,10 @@ use Drupal\Core\Hook\Attribute\Hook;
 final class PreprocessHooks {
 
   /**
-   * Implements hook_preprocess_HOOK() for my_component.
+   * Implements hook_preprocess_HOOK() for my_template.
    */
-  #[Hook('preprocess_my_component')]
-  public function preprocessMyComponent(array &$variables): void {
+  #[Hook('preprocess_my_template')]
+  public function preprocessMyTemplate(array &$variables): void {
     $node = $variables['node'] ?? NULL;
     if ($node) {
       $variables['title'] = $node->getTitle();

@@ -86,10 +86,15 @@ function list_extensions(string $root, string $directory): array {
   foreach ($info_files as $info_file) {
     $path = dirname($info_file);
     $package = read_json($path . '/package.json');
+    $base_theme = read_yaml_scalar(
+      (string) file_get_contents($info_file),
+      'base theme',
+    );
     $extensions[] = [
       'name' => basename($info_file, '.info.yml'),
       'path' => substr($path, strlen($root) + 1),
-      'base_theme' => read_yaml_scalar((string) file_get_contents($info_file), 'base theme'),
+      // "base theme: false" means the theme has no base theme.
+      'base_theme' => $base_theme === 'false' ? NULL : $base_theme,
       'npm_scripts' => array_keys($package['scripts'] ?? []),
       'sdc' => is_dir($path . '/components'),
     ];
@@ -114,41 +119,41 @@ function hook_style(?string $version): ?string {
   if (version_compare($version, '11.2', '>=')) {
     return 'oop';
   }
-  return version_compare($version, '11.1', '>=') ? 'oop_without_preprocess' : 'procedural';
+  return version_compare($version, '11.1', '>=')
+    ? 'oop_without_preprocess'
+    : 'procedural';
 }
 
 $root = (string) getcwd();
 $composer = read_json($root . '/composer.json');
 if ($composer === []) {
-  fwrite(STDERR, "No composer.json in $root. Run this script from the project root.\n");
+  fwrite(STDERR, "No composer.json in $root.\n");
+  fwrite(STDERR, "Run this script from the project root.\n");
   exit(1);
 }
 
 // Installed versions come from composer.lock; composer.json only has ranges.
 $lock = read_json($root . '/composer.lock');
 $installed = [];
-foreach (array_merge($lock['packages'] ?? [], $lock['packages-dev'] ?? []) as $package) {
+$locked = array_merge($lock['packages'] ?? [], $lock['packages-dev'] ?? []);
+foreach ($locked as $package) {
   $installed[$package['name']] = ltrim((string) $package['version'], 'v');
 }
 $require = ($composer['require'] ?? []) + ($composer['require-dev'] ?? []);
 
-$webroot = $composer['extra']['drupal-scaffold']['locations']['web-root'] ?? NULL;
-$webroot = is_string($webroot) ? trim(preg_replace('#^\./#', '', $webroot), '/') : NULL;
-if ($webroot === NULL || $webroot === '') {
-  $webroot = NULL;
-  foreach (['web', 'docroot', 'public', 'html'] as $candidate) {
-    if (is_dir($root . '/' . $candidate . '/core')) {
-      $webroot = $candidate;
-      break;
-    }
-  }
-}
+$scaffold = $composer['extra']['drupal-scaffold'] ?? [];
+$webroot = $scaffold['locations']['web-root'] ?? NULL;
+$webroot = is_string($webroot)
+  ? trim((string) preg_replace('#^\./#', '', $webroot), '/')
+  : '';
 
 $environment = ['type' => 'none'];
 $ddev_file = $root . '/.ddev/config.yaml';
 if (is_file($ddev_file)) {
   $ddev = (string) file_get_contents($ddev_file);
-  preg_match('/^database:\s*\n\s+type:\s*(\S+)\s*\n\s+version:\s*["\']?([^"\'\s]+)/m', $ddev, $database);
+  $database_pattern = '/^database:\s*\n\s+type:\s*(\S+)\s*\n'
+    . '\s+version:\s*["\']?([^"\'\s]+)/m';
+  preg_match($database_pattern, $ddev, $database);
   $name = read_yaml_scalar($ddev, 'name');
   $environment = [
     'type' => 'ddev',
@@ -163,20 +168,51 @@ if (is_file($ddev_file)) {
   ];
 }
 else {
-  $compose_file = first_existing($root, ['compose.yaml', 'compose.yml', 'docker-compose.yaml', 'docker-compose.yml']);
+  $compose_file = first_existing($root, [
+    'compose.yaml',
+    'compose.yml',
+    'docker-compose.yaml',
+    'docker-compose.yml',
+  ]);
   if ($compose_file !== NULL) {
     $environment = ['type' => 'docker-compose', 'file' => $compose_file];
   }
 }
 
+// Fallbacks for the webroot: the DDEV docroot, then a directory holding core.
+if ($webroot === '') {
+  $webroot = $environment['docroot'] ?? NULL;
+}
+if ($webroot === NULL) {
+  foreach (['web', 'docroot', 'public', 'html'] as $candidate) {
+    if (is_dir($root . '/' . $candidate . '/core')) {
+      $webroot = $candidate;
+      break;
+    }
+  }
+}
+
 $core_version = $installed['drupal/core'] ?? NULL;
-$workflows = array_map('basename', glob($root . '/.github/workflows/*.y*ml') ?: []);
+$workflow_files = glob($root . '/.github/workflows/*.y*ml') ?: [];
+$workflows = array_map('basename', $workflow_files);
+$modules = [];
+$themes = [];
+if ($webroot !== NULL) {
+  $modules = list_extensions($root, $webroot . '/modules/custom');
+  $themes = list_extensions($root, $webroot . '/themes/custom');
+}
+$phpunit_configs = ['phpunit.xml', 'phpunit.xml.dist'];
+if ($webroot !== NULL) {
+  $phpunit_configs[] = $webroot . '/core/phpunit.xml.dist';
+}
 
 $detected = [
   'webroot' => $webroot,
   'environment' => $environment,
   'drupal' => [
-    'constraint' => $require['drupal/core-recommended'] ?? $require['drupal/core'] ?? NULL,
+    'constraint' => $require['drupal/core-recommended']
+      ?? $require['drupal/core']
+      ?? NULL,
     'installed' => $core_version,
     'hooks' => hook_style($core_version),
   ],
@@ -185,28 +221,41 @@ $detected = [
     'platform' => $composer['config']['platform']['php'] ?? NULL,
   ],
   'drush' => $installed['drush/drush'] ?? NULL,
-  'modules' => $webroot === NULL ? [] : array_column(list_extensions($root, $webroot . '/modules/custom'), 'name'),
-  'themes' => $webroot === NULL ? [] : list_extensions($root, $webroot . '/themes/custom'),
-  'config_sync' => first_existing($root, ['config/sync', 'config/default', 'sync']),
-  'patches' => is_dir($root . '/patches') || isset($composer['extra']['patches']) || isset($composer['extra']['patches-file']),
+  'modules' => array_column($modules, 'name'),
+  'themes' => $themes,
+  'config_sync' => first_existing($root, [
+    'config/sync',
+    'config/default',
+    'sync',
+  ]),
+  'patches' => is_dir($root . '/patches')
+    || isset($composer['extra']['patches'])
+    || isset($composer['extra']['patches-file']),
   'ci' => array_values(array_filter([
     first_existing($root, ['.gitlab-ci.yml']),
     first_existing($root, ['bitbucket-pipelines.yml']),
     first_existing($root, ['.circleci/config.yml']),
     first_existing($root, ['Jenkinsfile']),
-    $workflows === [] ? NULL : '.github/workflows/ (' . implode(', ', $workflows) . ')',
+    $workflows === []
+      ? NULL
+      : '.github/workflows/ (' . implode(', ', $workflows) . ')',
   ])),
   'tools' => [
     'phpcs' => isset($installed['drupal/coder']),
-    'phpcs_config' => first_existing($root, ['phpcs.xml', 'phpcs.xml.dist', '.phpcs.xml', '.phpcs.xml.dist']),
+    'phpcs_config' => first_existing($root, [
+      'phpcs.xml',
+      'phpcs.xml.dist',
+      '.phpcs.xml',
+      '.phpcs.xml.dist',
+    ]),
     'phpstan' => isset($installed['phpstan/phpstan']),
-    'phpstan_config' => first_existing($root, ['phpstan.neon', 'phpstan.neon.dist', 'phpstan.dist.neon']),
+    'phpstan_config' => first_existing($root, [
+      'phpstan.neon',
+      'phpstan.neon.dist',
+      'phpstan.dist.neon',
+    ]),
     'phpunit' => $installed['phpunit/phpunit'] ?? NULL,
-    'phpunit_config' => first_existing($root, array_filter([
-      'phpunit.xml',
-      'phpunit.xml.dist',
-      $webroot === NULL ? NULL : $webroot . '/core/phpunit.xml.dist',
-    ])),
+    'phpunit_config' => first_existing($root, $phpunit_configs),
     'playwright_config' => first_existing($root, [
       'playwright.config.ts',
       'playwright.config.js',

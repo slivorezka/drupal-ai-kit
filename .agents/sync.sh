@@ -3,6 +3,8 @@
 # Keeps the tool-specific copies in step with their sources:
 #
 #   .agents/skills/     -> .claude/skills/         (Codex-only <skill>/agents/ is skipped)
+#                          .claude/skills/ is a mirror: a skill that exists only
+#                          there is deleted. Add skills in .agents/skills/.
 #   .claude/agents/*.md -> .codex/agents/*.toml    (description and instructions)
 #
 # Usage:
@@ -57,9 +59,10 @@ codex_agent() {
   description="$(frontmatter "$md" description | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
 
   if [[ -f "$toml" ]]; then
-    awk -v description="$description" '
+    # ENVIRON, not -v: awk would unescape the backslashes added above.
+    DESCRIPTION="$description" awk '
       /^developer_instructions = / { exit }
-      /^description = / { print "description = \"" description "\""; next }
+      /^description = / { print "description = \"" ENVIRON["DESCRIPTION"] "\""; next }
       { print }
     ' "$toml"
   else
@@ -116,6 +119,13 @@ for md in .claude/agents/*.md; do
     status=1
     continue
   fi
+  case "$(frontmatter "$md" description)" in
+    '' | '>'* | '|'*)
+      echo "Error: $md needs a one-line description (no YAML block scalar)." >&2
+      status=1
+      continue
+      ;;
+  esac
 
   if [[ -f "$toml" ]] && cmp -s "$tmp/$name.toml" "$toml"; then
     continue

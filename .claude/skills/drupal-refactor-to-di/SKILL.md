@@ -16,27 +16,29 @@ first. This skill is the procedure.
 
 2. **Map each call to a service and an interface.**
 
-   | Static call                       | Service                       | Type-hint                    |
-   |-----------------------------------|-------------------------------|------------------------------|
-   | `\Drupal::database()`             | `database`                    | `Connection`                 |
-   | `\Drupal::config()`, `configFactory()` | `config.factory`         | `ConfigFactoryInterface`     |
-   | `\Drupal::entityTypeManager()`    | `entity_type.manager`         | `EntityTypeManagerInterface` |
-   | `\Drupal::currentUser()`          | `current_user`                | `AccountProxyInterface`      |
-   | `\Drupal::moduleHandler()`        | `module_handler`              | `ModuleHandlerInterface`     |
-   | `\Drupal::logger('x')`            | `logger.channel.<module>`     | `LoggerInterface`            |
-   | `\Drupal::state()`                | `state`                       | `StateInterface`             |
-   | `\Drupal::cache()`                | `cache.default`               | `CacheBackendInterface`      |
-   | `\Drupal::httpClient()`           | `http_client`                 | `ClientInterface`            |
-   | `\Drupal::messenger()`            | `messenger`                   | `MessengerInterface`         |
-   | `\Drupal::formBuilder()`          | `form_builder`                | `FormBuilderInterface`       |
-   | `\Drupal::time()`                 | `datetime.time`               | `TimeInterface`              |
-   | `\Drupal::languageManager()`      | `language_manager`            | `LanguageManagerInterface`   |
-   | `\Drupal::service('x')`           | `x`                           | the interface of `x`         |
+   | Static call                            | Service                   | Type-hint                    |
+   |----------------------------------------|---------------------------|------------------------------|
+   | `\Drupal::database()`                  | `database`                | `Connection`                 |
+   | `\Drupal::config()`, `configFactory()` | `config.factory`          | `ConfigFactoryInterface`     |
+   | `\Drupal::entityTypeManager()`         | `entity_type.manager`     | `EntityTypeManagerInterface` |
+   | `\Drupal::currentUser()`               | `current_user`            | `AccountProxyInterface`      |
+   | `\Drupal::moduleHandler()`             | `module_handler`          | `ModuleHandlerInterface`     |
+   | `\Drupal::logger('x')`                 | `logger.channel.<module>` | `LoggerInterface`            |
+   | `\Drupal::state()`                     | `state`                   | `StateInterface`             |
+   | `\Drupal::cache()`                     | `cache.default`           | `CacheBackendInterface`      |
+   | `\Drupal::httpClient()`                | `http_client`             | `ClientInterface`            |
+   | `\Drupal::messenger()`                 | `messenger`               | `MessengerInterface`         |
+   | `\Drupal::formBuilder()`               | `form_builder`            | `FormBuilderInterface`       |
+   | `\Drupal::time()`                      | `datetime.time`           | `TimeInterface`              |
+   | `\Drupal::languageManager()`           | `language_manager`        | `LanguageManagerInterface`   |
+   | `\Drupal::service('x')`                | `x`                       | the interface of `x`         |
 
 3. **Inject by class kind.**
 
    - **Service** — promoted `private readonly` constructor parameters; registered by class name with
-     `autowire: true`. Update the existing `services.yml` entry instead of adding a second one.
+     `autowire: true`. Update the existing `services.yml` entry instead of adding a second one. A logger channel or
+     a cache bin is not identified by its type: name the service on the parameter with
+     `#[Autowire(service: 'logger.channel.<module>')]` (`drupal.md` §5, §12, §13).
    - **Controller, form** — constructor plus static `create(ContainerInterface $container): self`.
    - **Plugin** — implement `ContainerFactoryPluginInterface`; the constructor takes the base class's constructor
      arguments followed by the services and calls `parent::__construct()` first; static `create()` receives the

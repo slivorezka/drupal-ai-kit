@@ -103,6 +103,7 @@ Codex applies project `.codex/` settings only after you mark the project as trus
 - The commands in the guides assume [DDEV](https://ddev.com/); `generate-agents-md` tells you what to change for
   another setup.
 - `jq` on the host: the Claude Code hook that logs subagent runs to `.claude/agents.log` uses it.
+- `rsync` on the host for `.agents/sync.sh`.
 - `drupal/coder` (`phpcs`) in the project; PHPStan and Playwright are used when the project has them.
 
 ## Maintenance
@@ -118,6 +119,9 @@ Each rule has one source; the copies other tools need are generated:
 .agents/sync.sh          # after editing a skill or a subagent
 .agents/sync.sh --check  # exits 1 when a copy is out of date (runs in CI)
 ```
+
+`.claude/skills/` is a mirror: `.agents/sync.sh` deletes a skill that exists only there, so a project's own skills
+go to `.agents/skills/` as well.
 
 Codex-only settings stay where they are: `<skill>/agents/openai.yaml` is not copied to Claude Code, and the lines
 above `developer_instructions` in a `.codex/agents/*.toml` file (`model_reasoning_effort`, `sandbox_mode`) survive

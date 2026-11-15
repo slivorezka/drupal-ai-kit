@@ -748,6 +748,9 @@ final class CustomBlock extends BlockBase implements ContainerFactoryPluginInter
     return [
       '#theme' => 'my_block_template',
       '#data' => $data,
+      '#cache' => [
+        'tags' => ['my_module_tag'],
+      ],
     ];
   }
 
@@ -957,7 +960,7 @@ return [
   '#cache' => [
     'max-age' => 3600,
     'tags' => ['my_module_tag'],
-    'contexts' => ['user'],
+    'contexts' => ['user.roles'],
   ],
 ];
 ```
