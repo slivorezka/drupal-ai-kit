@@ -1,4 +1,4 @@
-# Drupal AI Development Kit
+# Drupal AI Kit
 
 A ready-to-use set of AI coding assistant configurations for Drupal 10/11 projects. It gives **GitHub Copilot**,
 **Codex** and **Claude Code** the same project rules, coding standards, reusable skills and specialised subagents, so
