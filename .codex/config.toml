@@ -7,4 +7,4 @@ sandbox_mode = "workspace-write"
 approval_policy = "on-request"
 
 # Counterpart of `language` in .claude/settings.json.
-developer_instructions = "Always respond in Ukrainian. Keep technical terms and code identifiers in their original form."
+developer_instructions = "Keep technical terms and code identifiers in their original form."

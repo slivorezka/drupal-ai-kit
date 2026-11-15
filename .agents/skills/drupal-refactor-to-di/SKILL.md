@@ -127,10 +127,10 @@ Generate all of the following:
 ```yaml
 services:
   { my_module }.{service_name}:
-                 class: Drupal\{my_module}\Service\{ServiceName}
-                 arguments:
-                   - '@dependency1'
-                   - '@dependency2'
+    class: Drupal\{my_module}\Service\{ServiceName}
+    arguments:
+    - '@dependency1'
+    - '@dependency2'
 ```
 
 3. **Migration Notes** — Steps to integrate:

@@ -59,17 +59,17 @@ declare(strict_types=1);
  * Implements hook_theme().
  */
 function my_module_theme(): array {
-    return [
-        'my_template' => [
-            'variables' => [
-                'title' => NULL,
-                'items' => [],
-                'description' => NULL,
-            ],
-            'template' => 'my-template',
-            'path' => drupal_get_path('module', 'my_module') . '/templates',
-        ],
-    ];
+  return [
+    'my_template' => [
+     'template' => 'my-template',
+     'path' => drupal_get_path('module', 'my_module') . '/templates',
+           'variables' => [
+        'title' => NULL,
+        'items' => [],
+        'description' => NULL,
+      ],
+    ],
+  ];
 }
 ```
 

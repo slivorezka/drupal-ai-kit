@@ -936,7 +936,7 @@ injected in §5:
 services:
   logger.channel.my_module:
     parent: logger.channel_base
-    arguments: [ 'my_module' ]
+    arguments: ['my_module']
 ```
 
 ---

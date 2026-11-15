@@ -419,7 +419,7 @@ final class PreprocessHooks {
 {% include 'sidebar.html.twig' %}
 {% endif %}
 
-{# ❌ Complex logic in template #}
+{# ❌ Complex logic in a template #}
 {% for item in items %}
 {% if item.status == 'active' and item.user.role == 'admin' %}
 ...

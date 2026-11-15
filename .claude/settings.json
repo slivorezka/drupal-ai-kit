@@ -1,7 +1,6 @@
 {
   "model": "opus",
   "alwaysThinkingEnabled": false,
-  "language": "ukrainian",
   "env": {
     "CLAUDE_CODE_HIDE_ACCOUNT_INFO": "1"
   },
