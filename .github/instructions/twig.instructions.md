@@ -232,23 +232,23 @@ Use the `|raw` filter ONLY when output is guaranteed to be safe:
 ```twig
 {# Simple if #}
 {% if isActive %}
-    <span class="badge badge--active">Active</span>
+  <span class="badge badge--active">Active</span>
 {% endif %}
 
 {# If/else #}
 {% if user.isAuthenticated %}
-    <p>Welcome, {{ user.name }}</p>
+  <p>Welcome, {{ user.name }}</p>
 {% else %}
-    <p><a href="/login">Login</a></p>
+  <p><a href="/login">Login</a></p>
 {% endif %}
 
 {# If/elseif/else #}
 {% if status == 'published' %}
-    <span class="status-published">Published</span>
+  <span class="status-published">Published</span>
 {% elseif status == 'draft' %}
-    <span class="status-draft">Draft</span>
+  <span class="status-draft">Draft</span>
 {% else %}
-    <span class="status-archived">Archived</span>
+  <span class="status-archived">Archived</span>
 {% endif %}
 ```
 
@@ -257,22 +257,22 @@ Use the `|raw` filter ONLY when output is guaranteed to be safe:
 ```twig
 {# AND #}
 {% if title and description %}
-    Both fields present
+  Both fields present
 {% endif %}
 
 {# OR #}
 {% if isPending or isApproved %}
-    Status is set
+  Status is set
 {% endif %}
 
 {# NOT #}
 {% if not isEmpty %}
-    Has content
+  Has content
 {% endif %}
 
 {# Complex conditions #}
 {% if (isActive and isPaid) or (isPremium and not isExpired) %}
-    User can access
+  User can access
 {% endif %}
 ```
 
@@ -284,7 +284,7 @@ Use the `|raw` filter ONLY when output is guaranteed to be safe:
 
 {# Check for multiple conditions #}
 {% if item is not null and item is not empty %}
-    <p>{{ item }}</p>
+  <p>{{ item }}</p>
 {% endif %}
 ```
 
@@ -297,23 +297,23 @@ Use the `|raw` filter ONLY when output is guaranteed to be safe:
 ```twig
 {# Basic loop #}
 {% for item in items %}
-    <div>{{ item }}</div>
+  <div>{{ item }}</div>
 {% endfor %}
 
 {# Loop with key-value pairs #}
 {% for key, value in data %}
-    <dt>{{ key }}</dt>
-    <dd>{{ value }}</dd>
+  <dt>{{ key }}</dt>
+  <dd>{{ value }}</dd>
 {% endfor %}
 
 {# Loop with range #}
 {% for i in 1..10 %}
-    <li>Item {{ i }}</li>
+  <li>Item {{ i }}</li>
 {% endfor %}
 
 {# Loop with step #}
 {% for i in 0..100..10 %}
-    {{ i }}
+  {{ i }}
 {% endfor %}
 ```
 
@@ -323,30 +323,30 @@ Twig provides special variables inside loops:
 
 ```twig
 {% for item in items %}
-    {# loop.index: 1-based index #}
-    {% if loop.index == 1 %}First item{% endif %}
+  {# loop.index: 1-based index #}
+  {% if loop.index == 1 %}First item{% endif %}
 
-    {# loop.index0: 0-based index #}
-    {{ loop.index0 }}
+  {# loop.index0: 0-based index #}
+  {{ loop.index0 }}
 
-    {# loop.first: True on first iteration #}
-    {% if loop.first %}<ul>{% endif %}
+  {# loop.first: True on first iteration #}
+  {% if loop.first %}<ul>{% endif %}
 
-    {# loop.last: True on last iteration #}
-    <li>{{ item }}</li>
-    {% if loop.last %}</ul>{% endif %}
+  {# loop.last: True on last iteration #}
+  <li>{{ item }}</li>
+  {% if loop.last %}</ul>{% endif %}
 
-    {# loop.length: Total items in loop #}
-    {{ loop.index }} of {{ loop.length }}
+  {# loop.length: Total items in loop #}
+  {{ loop.index }} of {{ loop.length }}
 
-    {# loop.revindex: Reverse index (countdown) #}
-    {{ loop.revindex }} items remaining
+  {# loop.revindex: Reverse index (countdown) #}
+  {{ loop.revindex }} items remaining
 
-    {# loop.revindex0: Reverse index 0-based #}
-    {{ loop.revindex0 }}
+  {# loop.revindex0: Reverse index 0-based #}
+  {{ loop.revindex0 }}
 
-    {# loop.even/odd: Check if iteration is even or odd #}
-    {% if loop.even %}<tr class="even">{% else %}<tr class="odd">{% endif %}
+  {# loop.even/odd: Check if iteration is even or odd #}
+  {% if loop.even %}<tr class="even">{% else %}<tr class="odd">{% endif %}
 {% endfor %}
 ```
 
@@ -354,9 +354,9 @@ Twig provides special variables inside loops:
 
 ```twig
 {% for item in items %}
-    <li>{{ item }}</li>
+  <li>{{ item }}</li>
 {% else %}
-    <li>No items found</li>
+  <li>No items found</li>
 {% endfor %}
 ```
 
@@ -425,11 +425,11 @@ Twig provides special variables inside loops:
 
 {# Batch into chunks #}
 {% for batch in items|batch(3) %}
-    <div class="row">
-        {% for item in batch %}
-            <div class="col">{{ item }}</div>
-        {% endfor %}
-    </div>
+  <div class="row">
+    {% for item in batch %}
+      <div class="col">{{ item }}</div>
+    {% endfor %}
+  </div>
 {% endfor %}
 ```
 
@@ -480,9 +480,9 @@ Twig provides special variables inside loops:
 
 {# Pluralization #}
 {% trans %}
-    You have 1 item.
+  You have 1 item.
 {% plural count %}
-    You have @count items.
+  You have @count items.
 {% endtrans %}
 ```
 
@@ -507,12 +507,12 @@ Twig provides special variables inside loops:
 
 {# Render with custom attributes #}
 <div{{ attributes }}>
-    {{ content }}
+  {{ content }}
 </div>
 
 {# Check if field has content #}
 {% if content.field_body %}
-    {{ content.field_body }}
+  {{ content.field_body }}
 {% endif %}
 ```
 
@@ -562,17 +562,17 @@ Create a base template:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}My Site{% endblock %}</title>
-    {% block head %}{% endblock %}
+  <title>{% block title %}My Site{% endblock %}</title>
+  {% block head %}{% endblock %}
 </head>
 <body>
-    <header>{% block header %}Header{% endblock %}</header>
+  <header>{% block header %}Header{% endblock %}</header>
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
 
-    <footer>{% block footer %}Footer{% endblock %}</footer>
+  <footer>{% block footer %}Footer{% endblock %}</footer>
 </body>
 </html>
 ```
@@ -587,12 +587,12 @@ Extend the base template:
 {% block title %}Page Title{% endblock %}
 
 {% block content %}
-    <h1>{{ pageTitle }}</h1>
-    <p>{{ pageContent }}</p>
+  <h1>{{ pageTitle }}</h1>
+  <p>{{ pageContent }}</p>
 {% endblock %}
 
 {% block footer %}
-    <p>Custom footer for this page</p>
+  <p>Custom footer for this page</p>
 {% endblock %}
 ```
 
@@ -604,9 +604,9 @@ Extend the base template:
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <div class="page-wrapper">
-        {{ parent() }}  {# Include parent block content #}
-    </div>
+  <div class="page-wrapper">
+    {{ parent() }}  {# Include parent block content #}
+  </div>
 {% endblock %}
 ```
 
@@ -622,14 +622,14 @@ Extend the base template:
 
 {# Pass variables to included template #}
 {% include 'components/card.html.twig' with {
-    'title': item.title,
-    'image': item.image,
-    'description': item.description
+  'title': item.title,
+  'image': item.image,
+  'description': item.description
 } %}
 
 {# Include without passing current context #}
 {% include 'components/card.html.twig' with {
-    'title': item.title
+  'title': item.title
 } only %}
 ```
 
@@ -641,8 +641,8 @@ Extend the base template:
 
 {# Include with fallback #}
 {% include [
-    'components/' ~ componentType ~ '.html.twig',
-    'components/default.html.twig'
+  'components/' ~ componentType ~ '.html.twig',
+  'components/default.html.twig'
 ] %}
 ```
 
@@ -673,9 +673,9 @@ Usage:
 
 ```twig
 {% include 'components/button.html.twig' with {
-    'text': 'Click me',
-    'url': '/submit',
-    'type': 'primary'
+  'text': 'Click me',
+  'url': '/submit',
+  'type': 'primary'
 } %}
 ```
 
@@ -726,18 +726,18 @@ Use BEM for CSS class naming in templates:
 
 ```twig
 <div class="card">                              {# Block #}
-    <div class="card__header">                 {# Element #}
-        <h2 class="card__title">Title</h2>
-    </div>
+  <div class="card__header">                 {# Element #}
+    <h2 class="card__title">Title</h2>
+  </div>
 
-    <div class="card__body">
-        <p class="card__description">Desc</p>
-    </div>
+  <div class="card__body">
+    <p class="card__description">Desc</p>
+  </div>
 
-    <div class="card__footer">
-        <button class="card__button card__button--primary">Action</button>
-        <button class="card__button card__button--secondary">Cancel</button>
-    </div>
+  <div class="card__footer">
+    <button class="card__button card__button--primary">Action</button>
+    <button class="card__button card__button--secondary">Cancel</button>
+  </div>
 </div>
 ```
 
@@ -749,9 +749,9 @@ Use BEM for CSS class naming in templates:
 
 {# Multiple conditional classes #}
 <div class="card
-    {% if isFeatured %}card--featured{% endif %}
-    {% if hasImage %}card--with-image{% endif %}
-    {% if isSmall %}card--small{% endif %}
+  {% if isFeatured %}card--featured{% endif %}
+  {% if hasImage %}card--with-image{% endif %}
+  {% if isSmall %}card--small{% endif %}
 ">
 
 {# Build class array #}
@@ -786,7 +786,7 @@ In the template:
 
 ```twig
 <article{{ attributes }}>
-    {{ content }}
+  {{ content }}
 </article>
 ```
 
@@ -800,8 +800,8 @@ In the template:
 {# Single line comment - not rendered #}
 
 {#
-    Multi-line comment
-    for documenting logic
+  Multi-line comment
+  for documenting logic
 #}
 
 {# TODO: Implement user profile logic #}
@@ -846,36 +846,36 @@ In the template:
 
 {# Input field macro #}
 {% macro input(name, label, type = 'text', required = false) %}
-    <div class="form-group">
-        <label for="{{ name }}" class="form-label">
-            {{ label }}
-            {% if required %}<span class="required">*</span>{% endif %}
-        </label>
-        <input
-            type="{{ type }}"
-            id="{{ name }}"
-            name="{{ name }}"
-            class="form-input"
-            {% if required %}required{% endif %}
-        >
-    </div>
+  <div class="form-group">
+    <label for="{{ name }}" class="form-label">
+      {{ label }}
+      {% if required %}<span class="required">*</span>{% endif %}
+    </label>
+    <input
+      type="{{ type }}"
+      id="{{ name }}"
+      name="{{ name }}"
+      class="form-input"
+      {% if required %}required{% endif %}
+    >
+  </div>
 {% endmacro %}
 
 {# Text area macro #}
 {% macro textarea(name, label, rows = 5, required = false) %}
-    <div class="form-group">
-        <label for="{{ name }}" class="form-label">
-            {{ label }}
-            {% if required %}<span class="required">*</span>{% endif %}
-        </label>
-        <textarea
-            id="{{ name }}"
-            name="{{ name }}"
-            rows="{{ rows }}"
-            class="form-textarea"
-            {% if required %}required{% endif %}
-        ></textarea>
-    </div>
+  <div class="form-group">
+    <label for="{{ name }}" class="form-label">
+      {{ label }}
+      {% if required %}<span class="required">*</span>{% endif %}
+    </label>
+    <textarea
+      id="{{ name }}"
+      name="{{ name }}"
+      rows="{{ rows }}"
+      class="form-textarea"
+      {% if required %}required{% endif %}
+    ></textarea>
+  </div>
 {% endmacro %}
 ```
 
@@ -885,11 +885,11 @@ In the template:
 {% import 'macros/forms.html.twig' as forms %}
 
 <form method="POST">
-    {{ forms.input('email', 'Email Address', 'email', true) }}
-    {{ forms.input('name', 'Full Name', 'text', true) }}
-    {{ forms.textarea('message', 'Your Message', 10, true) }}
+  {{ forms.input('email', 'Email Address', 'email', true) }}
+  {{ forms.input('name', 'Full Name', 'text', true) }}
+  {{ forms.textarea('message', 'Your Message', 10, true) }}
 
-    <button type="submit">Send</button>
+  <button type="submit">Send</button>
 </form>
 ```
 
@@ -1023,19 +1023,19 @@ Add further preprocess methods to the same class (or a separate class per concer
 
 {# Field without wrapper #}
 <div class="my-wrapper">
-    {{ content.field_image|render }}
+  {{ content.field_image|render }}
 </div>
 
 {# Check field exists and has content #}
 {% if content.field_body %}
-    <div class="body">
-        {{ content.field_body }}
-    </div>
+  <div class="body">
+    {{ content.field_body }}
+  </div>
 {% endif %}
 
 {# Render with attributes #}
 <div class="field-wrapper"{{ content_attributes }}>
-    {{ content.field_body }}
+  {{ content.field_body }}
 </div>
 ```
 
@@ -1064,41 +1064,41 @@ Add further preprocess methods to the same class (or a separate class per concer
 ```twig
 {# Simple condition #}
 {% if title %}
-    <h1>{{ title }}</h1>
+  <h1>{{ title }}</h1>
 {% endif %}
 
 {# Nested conditions #}
 {% if user %}
-    {% if user.isAdmin %}
-        <div class="admin-tools">Admin</div>
-    {% endif %}
+  {% if user.isAdmin %}
+    <div class="admin-tools">Admin</div>
+  {% endif %}
 {% endif %}
 
 {# Check array/object properties #}
 {% if item.image.url %}
-    <img src="{{ item.image.url }}" alt="{{ item.image.alt }}">
+  <img src="{{ item.image.url }}" alt="{{ item.image.alt }}">
 {% endif %}
 
 {# Test filters #}
 {% if item|default %}
-    <p>{{ item }}</p>
+  <p>{{ item }}</p>
 {% endif %}
 
 {# Type checking #}
 {% if item is iterable %}
-    {% for i in item %}...{% endfor %}
+  {% for i in item %}...{% endfor %}
 {% endif %}
 
 {% if value is empty %}
-    No value
+  No value
 {% endif %}
 
 {% if value is not null %}
-    {{ value }}
+  {{ value }}
 {% endif %}
 
 {% if string is same as(compareTo) %}
-    Exact match
+  Exact match
 {% endif %}
 ```
 
@@ -1130,12 +1130,12 @@ Add further preprocess methods to the same class (or a separate class per concer
 ```twig
 {# Never trust user input - always escape #}
 {% if user_provided_html %}
-    {# This is dangerous! #}
-    {{ user_provided_html }}  {# Wrong! #}
+  {# This is dangerous! #}
+  {{ user_provided_html }}  {# Wrong! #}
 
-    {# Do this instead #}
-    {{ user_provided_html|striptags }}  {# Remove HTML #}
-    {{ user_provided_html|escape }}     {# Escape HTML #}
+  {# Do this instead #}
+  {{ user_provided_html|striptags }}  {# Remove HTML #}
+  {{ user_provided_html|escape }}     {# Escape HTML #}
 {% endif %}
 ```
 
@@ -1161,13 +1161,13 @@ Add further preprocess methods to the same class (or a separate class per concer
 ```twig
 {# Don't process if not needed #}
 {% if should_show_sidebar %}
-    {% include 'sidebar.html.twig' %}
+  {% include 'sidebar.html.twig' %}
 {% endif %}
 
 {# Use loop early exit #}
 {% for item in items %}
-    {% if loop.index > 10 %}{% break %}{% endif %}
-    <li>{{ item }}</li>
+  {% if loop.index > 10 %}{% break %}{% endif %}
+  <li>{{ item }}</li>
 {% endfor %}
 ```
 
@@ -1176,15 +1176,15 @@ Add further preprocess methods to the same class (or a separate class per concer
 ```twig
 {# ❌ Complex logic in template #}
 {% for item in items %}
-    {% if item.status == 'active' and item.user.role == 'admin' and item.type == 'featured' %}
-        Do something complex
-    {% endif %}
+  {% if item.status == 'active' and item.user.role == 'admin' and item.type == 'featured' %}
+    Do something complex
+  {% endif %}
 {% endfor %}
 
 {# ✅ Process in PHP #}
 {# In preprocess: filter items before passing to template #}
 {% for item in activeAdminFeaturedItems %}
-    <li>{{ item.title }}</li>
+  <li>{{ item.title }}</li>
 {% endfor %}
 ```
 
@@ -1287,30 +1287,30 @@ final class ExpensiveTemplateHooks {
 {# components/tabs.html.twig #}
 
 <div class="tabs">
-    <div class="tabs__nav" role="tablist">
-        {% for tab in tabs %}
-            <button
-                class="tabs__button {% if loop.first %}tabs__button--active{% endif %}"
-                role="tab"
-                aria-selected="{% if loop.first %}true{% else %}false{% endif %}"
-                aria-controls="tab-{{ loop.index }}"
-            >
-                {{ tab.label }}
-            </button>
-        {% endfor %}
-    </div>
+  <div class="tabs__nav" role="tablist">
+    {% for tab in tabs %}
+      <button
+        class="tabs__button {% if loop.first %}tabs__button--active{% endif %}"
+        role="tab"
+        aria-selected="{% if loop.first %}true{% else %}false{% endif %}"
+        aria-controls="tab-{{ loop.index }}"
+      >
+        {{ tab.label }}
+      </button>
+    {% endfor %}
+  </div>
 
-    <div class="tabs__content">
-        {% for tab in tabs %}
-            <div
-                class="tabs__panel {% if loop.first %}tabs__panel--active{% endif %}"
-                id="tab-{{ loop.index }}"
-                role="tabpanel"
-            >
-                {{ tab.content }}
-            </div>
-        {% endfor %}
-    </div>
+  <div class="tabs__content">
+    {% for tab in tabs %}
+      <div
+        class="tabs__panel {% if loop.first %}tabs__panel--active{% endif %}"
+        id="tab-{{ loop.index }}"
+        role="tabpanel"
+      >
+        {{ tab.content }}
+      </div>
+    {% endfor %}
+  </div>
 </div>
 ```
 
@@ -1320,42 +1320,42 @@ final class ExpensiveTemplateHooks {
 {# components/pagination.html.twig #}
 
 {% if pager %}
-    <nav class="pagination" aria-label="Pagination">
-        <ul class="pagination__list">
-            {# Previous link #}
-            {% if pager.previous %}
-                <li class="pagination__item">
-                    <a href="{{ pager.previous }}" class="pagination__link">
-                        ← Previous
-                    </a>
-                </li>
-            {% endif %}
+  <nav class="pagination" aria-label="Pagination">
+    <ul class="pagination__list">
+      {# Previous link #}
+      {% if pager.previous %}
+        <li class="pagination__item">
+          <a href="{{ pager.previous }}" class="pagination__link">
+            ← Previous
+          </a>
+        </li>
+      {% endif %}
 
-            {# Page numbers #}
-            {% for page_num, page_url in pager.pages %}
-                <li class="pagination__item">
-                    {% if page_url %}
-                        <a href="{{ page_url }}" class="pagination__link">
-                            {{ page_num }}
-                        </a>
-                    {% else %}
-                        <span class="pagination__link pagination__link--active">
-                            {{ page_num }}
-                        </span>
-                    {% endif %}
-                </li>
-            {% endfor %}
+      {# Page numbers #}
+      {% for page_num, page_url in pager.pages %}
+        <li class="pagination__item">
+          {% if page_url %}
+            <a href="{{ page_url }}" class="pagination__link">
+              {{ page_num }}
+            </a>
+          {% else %}
+            <span class="pagination__link pagination__link--active">
+              {{ page_num }}
+            </span>
+          {% endif %}
+        </li>
+      {% endfor %}
 
-            {# Next link #}
-            {% if pager.next %}
-                <li class="pagination__item">
-                    <a href="{{ pager.next }}" class="pagination__link">
-                        Next →
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
+      {# Next link #}
+      {% if pager.next %}
+        <li class="pagination__item">
+          <a href="{{ pager.next }}" class="pagination__link">
+            Next →
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
 {% endif %}
 ```
 
@@ -1457,7 +1457,7 @@ Available vars: {% for key in _context|keys %}{{ key }}{% if not loop.last %}, {
 
 {# ✅ Check existence first #}
 {% if myVar is defined %}
-    {{ myVar }}
+  {{ myVar }}
 {% endif %}
 ```
 
@@ -1466,14 +1466,14 @@ Available vars: {% for key in _context|keys %}{{ key }}{% if not loop.last %}, {
 ```twig
 {# ❌ loop variable only available inside loop #}
 {% for item in items %}
-    {{ item }}
+  {{ item }}
 {% endfor %}
 {# loop.index not available here #}
 
 {# ✅ Use set for values needed outside loop #}
 {% set itemCount = items|length %}
 {% for item in items %}
-    {{ item }}
+  {{ item }}
 {% endfor %}
 Item count: {{ itemCount }}
 ```

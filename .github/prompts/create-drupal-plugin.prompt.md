@@ -74,36 +74,36 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class {PluginClassName} extends {BaseClass} {
 
-    /**
-     * Constructor.
-     *
-     * {@inheritdoc}
-     */
-    public function __construct(
-        array $configuration,
-        string $plugin_id,
-        mixed $plugin_definition,
-        // Additional dependencies if needed
-    ) {
-        parent::__construct($configuration, $plugin_id, $plugin_definition);
-    }
+  /**
+   * Constructor.
+   *
+   * {@inheritdoc}
+   */
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
+    // Additional dependencies if needed
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
-        return new self($configuration, $plugin_id, $plugin_definition);
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new self($configuration, $plugin_id, $plugin_definition);
+  }
 
-    /**
-     * Method description.
-     *
-     * @return [ReturnType]
-     *   Description of return value.
-     */
-    public function methodName(): [ReturnType] {
-        // Implementation
-    }
+  /**
+   * Method description.
+   *
+   * @return [ReturnType]
+   *   Description of return value.
+   */
+  public function methodName(): [ReturnType] {
+    // Implementation
+  }
 }
 ```
 
@@ -181,135 +181,135 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SearchFeatureBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
-    /**
-     * The current user.
-     *
-     * @var \Drupal\Core\Session\AccountProxyInterface
-     */
-    protected AccountProxyInterface $currentUser;
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected AccountProxyInterface $currentUser;
 
-    /**
-     * Constructor.
-     *
-     * @param array $configuration
-     *   A configuration array containing information about the plugin instance.
-     * @param string $plugin_id
-     *   The plugin_id for the plugin instance.
-     * @param mixed $plugin_definition
-     *   The plugin implementation definition.
-     * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-     *   The current user service.
-     */
-    public function __construct(
-        array $configuration,
-        string $plugin_id,
-        mixed $plugin_definition,
-        AccountProxyInterface $current_user,
-    ) {
-        parent::__construct($configuration, $plugin_id, $plugin_definition);
-        $this->currentUser = $current_user;
-    }
+  /**
+   * Constructor.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user service.
+   */
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
+    AccountProxyInterface $current_user,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->currentUser = $current_user;
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(
-        ContainerInterface $container,
-        array $configuration,
-        $plugin_id,
-        $plugin_definition,
-    ): self {
-        return new self(
-            $configuration,
-            $plugin_id,
-            $plugin_definition,
-            $container->get('current_user'),
-        );
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('current_user'),
+    );
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function build(): array {
-        $config = $this->getConfiguration();
+  /**
+   * {@inheritdoc}
+   */
+  public function build(): array {
+    $config = $this->getConfiguration();
 
-        return [
-            '#theme' => 'search_feature_block',
-            '#title' => $config['title'] ?? $this->t('Search'),
-            '#show_filters' => $config['show_filters'] ?? TRUE,
-            '#allow_advanced' => $config['allow_advanced'] ?? FALSE,
-            '#attached' => [
-                'library' => ['my_module/search_block'],
-            ],
-        ];
-    }
+    return [
+      '#theme' => 'search_feature_block',
+      '#title' => $config['title'] ?? $this->t('Search'),
+      '#show_filters' => $config['show_filters'] ?? TRUE,
+      '#allow_advanced' => $config['allow_advanced'] ?? FALSE,
+      '#attached' => [
+        'library' => ['my_module/search_block'],
+      ],
+    ];
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function blockAccess(AccountInterface $account): AccessResultInterface {
-        // Allow access if user has permission
-        return AccessResult::allowedIfHasPermission($account, 'access content');
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function blockAccess(AccountInterface $account): AccessResultInterface {
+    // Allow access if user has permission
+    return AccessResult::allowedIfHasPermission($account, 'access content');
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function defaultConfiguration(): array {
-        return [
-            'title' => $this->t('Search Content'),
-            'show_filters' => TRUE,
-            'allow_advanced' => FALSE,
-            'default_type' => 'all',
-            'results_per_page' => 10,
-        ];
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
+    return [
+      'title' => $this->t('Search Content'),
+      'show_filters' => TRUE,
+      'allow_advanced' => FALSE,
+      'default_type' => 'all',
+      'results_per_page' => 10,
+    ];
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function blockForm($form, FormStateInterface $form_state): array {
-        $config = $this->getConfiguration();
+  /**
+   * {@inheritdoc}
+   */
+  public function blockForm($form, FormStateInterface $form_state): array {
+    $config = $this->getConfiguration();
 
-        $form['title'] = [
-            '#type' => 'textfield',
-            '#title' => $this->t('Block Title'),
-            '#default_value' => $config['title'],
-            '#required' => TRUE,
-        ];
+    $form['title'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Block Title'),
+      '#default_value' => $config['title'],
+      '#required' => TRUE,
+    ];
 
-        $form['show_filters'] = [
-            '#type' => 'checkbox',
-            '#title' => $this->t('Show Filter Options'),
-            '#default_value' => $config['show_filters'],
-        ];
+    $form['show_filters'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show Filter Options'),
+      '#default_value' => $config['show_filters'],
+    ];
 
-        $form['allow_advanced'] = [
-            '#type' => 'checkbox',
-            '#title' => $this->t('Allow Advanced Search'),
-            '#default_value' => $config['allow_advanced'],
-        ];
+    $form['allow_advanced'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Allow Advanced Search'),
+      '#default_value' => $config['allow_advanced'],
+    ];
 
-        $form['results_per_page'] = [
-            '#type' => 'number',
-            '#title' => $this->t('Results Per Page'),
-            '#default_value' => $config['results_per_page'],
-            '#min' => 1,
-            '#max' => 100,
-        ];
+    $form['results_per_page'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Results Per Page'),
+      '#default_value' => $config['results_per_page'],
+      '#min' => 1,
+      '#max' => 100,
+    ];
 
-        return $form;
-    }
+    return $form;
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function blockSubmit($form, FormStateInterface $form_state): void {
-        $this->configuration['title'] = $form_state->getValue('title');
-        $this->configuration['show_filters'] = $form_state->getValue('show_filters');
-        $this->configuration['allow_advanced'] = $form_state->getValue('allow_advanced');
-        $this->configuration['results_per_page'] = $form_state->getValue('results_per_page');
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function blockSubmit($form, FormStateInterface $form_state): void {
+    $this->configuration['title'] = $form_state->getValue('title');
+    $this->configuration['show_filters'] = $form_state->getValue('show_filters');
+    $this->configuration['allow_advanced'] = $form_state->getValue('allow_advanced');
+    $this->configuration['results_per_page'] = $form_state->getValue('results_per_page');
+  }
 }
 ```
 
@@ -327,36 +327,36 @@ class SearchFeatureBlock extends BlockBase implements ContainerFactoryPluginInte
 **Template Example** (`search-feature-block.html.twig`):
 ```twig
 <div class="search-feature-block">
-    {% if title %}
-        <h2 class="search-feature-block__title">{{ title }}</h2>
+  {% if title %}
+    <h2 class="search-feature-block__title">{{ title }}</h2>
+  {% endif %}
+
+  <form class="search-feature-block__form" method="GET" action="/search">
+    <input
+      type="text"
+      name="q"
+      class="search-feature-block__input"
+      placeholder="Enter search terms..."
+      required
+    >
+
+    {% if show_filters %}
+      <div class="search-feature-block__filters">
+        <label>
+          Content Type:
+          <select name="type">
+            <option value="">-- All --</option>
+            <option value="article">Article</option>
+            <option value="page">Page</option>
+          </select>
+        </label>
+      </div>
     {% endif %}
 
-    <form class="search-feature-block__form" method="GET" action="/search">
-        <input
-            type="text"
-            name="q"
-            class="search-feature-block__input"
-            placeholder="Enter search terms..."
-            required
-        >
-
-        {% if show_filters %}
-            <div class="search-feature-block__filters">
-                <label>
-                    Content Type:
-                    <select name="type">
-                        <option value="">-- All --</option>
-                        <option value="article">Article</option>
-                        <option value="page">Page</option>
-                    </select>
-                </label>
-            </div>
-        {% endif %}
-
-        <button type="submit" class="search-feature-block__submit">
-            {{ 'Search'|t }}
-        </button>
-    </form>
+    <button type="submit" class="search-feature-block__submit">
+      {{ 'Search'|t }}
+    </button>
+  </form>
 </div>
 ```
 
@@ -367,67 +367,67 @@ class SearchFeatureBlock extends BlockBase implements ContainerFactoryPluginInte
 ### Block Plugin
 ```php
 @Block(
-   id = "my_block",
-   admin_label = @Translation("My Block"),
-   category = @Translation("Custom"),
+  id = "my_block",
+  admin_label = @Translation("My Block"),
+  category = @Translation("Custom"),
 )
 class MyBlock extends BlockBase implements ContainerFactoryPluginInterface {
-    // Implement build(), defaultConfiguration(), blockForm(), blockSubmit()
+  // Implement build(), defaultConfiguration(), blockForm(), blockSubmit()
 }
 ```
 
 ### Field Widget Plugin
 ```php
 @FieldWidget(
-   id = "my_widget",
-   module = "my_module",
-   label = @Translation("My Widget"),
-   field_types = {
-     "text",
-     "text_long",
-   }
+  id = "my_widget",
+  module = "my_module",
+  label = @Translation("My Widget"),
+  field_types = {
+    "text",
+    "text_long",
+  }
 )
 class MyWidget extends WidgetBase {
-    // Implement formElement(), massageFormValues()
+  // Implement formElement(), massageFormValues()
 }
 ```
 
 ### Views Filter Plugin
 ```php
 @ViewsFilter(
-   id = "my_filter",
-   title = @Translation("My Filter"),
+  id = "my_filter",
+  title = @Translation("My Filter"),
 )
 class MyFilter extends FilterPluginBase {
-    // Implement query(), buildOptionsForm(), validateOptionsForm()
+  // Implement query(), buildOptionsForm(), validateOptionsForm()
 }
 ```
 
 ### Search API Processor Plugin
 ```php
 @SearchApiProcessor(
-   id = "my_processor",
-   label = @Translation("My Processor"),
-   description = @Translation("Process search data"),
-   stages = {
-     "pre_index_save" = 0,
-     "post_index_save" = 0,
-   }
+  id = "my_processor",
+  label = @Translation("My Processor"),
+  description = @Translation("Process search data"),
+  stages = {
+    "pre_index_save" = 0,
+    "post_index_save" = 0,
+  }
 )
 class MyProcessor extends ProcessorPluginBase {
-    // Implement preIndexSave(), postIndexSave()
+  // Implement preIndexSave(), postIndexSave()
 }
 ```
 
 ### Condition Plugin
 ```php
 @Condition(
-   id = "my_condition",
-   label = @Translation("My Condition"),
-   category = @Translation("Custom"),
+  id = "my_condition",
+  label = @Translation("My Condition"),
+  category = @Translation("Custom"),
 )
 class MyCondition extends ConditionPluginBase {
-    // Implement evaluate(), buildConfigurationForm()
+  // Implement evaluate(), buildConfigurationForm()
 }
 ```
 
@@ -439,42 +439,42 @@ class MyCondition extends ConditionPluginBase {
 
 ```php
 public function defaultConfiguration(): array {
-    return [
-        'label' => '',
-        'enabled' => TRUE,
-        'max_items' => 10,
-    ];
+  return [
+    'label' => '',
+    'enabled' => TRUE,
+    'max_items' => 10,
+  ];
 }
 
 public function blockForm($form, FormStateInterface $form_state): array {
-    $config = $this->getConfiguration();
+  $config = $this->getConfiguration();
 
-    $form['label'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Label'),
-        '#default_value' => $config['label'],
-    ];
+  $form['label'] = [
+    '#type' => 'textfield',
+    '#title' => $this->t('Label'),
+    '#default_value' => $config['label'],
+  ];
 
-    $form['enabled'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Enabled'),
-        '#default_value' => $config['enabled'],
-    ];
+  $form['enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => $this->t('Enabled'),
+    '#default_value' => $config['enabled'],
+  ];
 
-    $form['max_items'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Maximum Items'),
-        '#default_value' => $config['max_items'],
-        '#min' => 1,
-    ];
+  $form['max_items'] = [
+    '#type' => 'number',
+    '#title' => $this->t('Maximum Items'),
+    '#default_value' => $config['max_items'],
+    '#min' => 1,
+  ];
 
-    return $form;
+  return $form;
 }
 
 public function blockSubmit($form, FormStateInterface $form_state): void {
-    $this->configuration['label'] = $form_state->getValue('label');
-    $this->configuration['enabled'] = $form_state->getValue('enabled');
-    $this->configuration['max_items'] = $form_state->getValue('max_items');
+  $this->configuration['label'] = $form_state->getValue('label');
+  $this->configuration['enabled'] = $form_state->getValue('enabled');
+  $this->configuration['max_items'] = $form_state->getValue('max_items');
 }
 ```
 
@@ -486,31 +486,31 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MyPlugin extends PluginBase implements ContainerFactoryPluginInterface {
 
-    protected MyService $myService;
+  protected MyService $myService;
 
-    public function __construct(
-        array $configuration,
-        string $plugin_id,
-        mixed $plugin_definition,
-        MyService $my_service,
-    ) {
-        parent::__construct($configuration, $plugin_id, $plugin_definition);
-        $this->myService = $my_service;
-    }
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
+    MyService $my_service,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->myService = $my_service;
+  }
 
-    public static function create(
-        ContainerInterface $container,
-        array $configuration,
-        $plugin_id,
-        $plugin_definition,
-    ): self {
-        return new self(
-            $configuration,
-            $plugin_id,
-            $plugin_definition,
-            $container->get('my_module.my_service'),
-        );
-    }
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('my_module.my_service'),
+    );
+  }
 }
 ```
 
@@ -518,12 +518,12 @@ class MyPlugin extends PluginBase implements ContainerFactoryPluginInterface {
 
 ```php
 public function blockValidate($form, FormStateInterface $form_state): void {
-    $value = $form_state->getValue('max_items');
+  $value = $form_state->getValue('max_items');
 
-    if ($value < 1 || $value > 100) {
-        $form_state->setErrorByName('max_items',
-            $this->t('Value must be between 1 and 100'));
-    }
+  if ($value < 1 || $value > 100) {
+    $form_state->setErrorByName('max_items',
+      $this->t('Value must be between 1 and 100'));
+  }
 }
 ```
 
@@ -534,12 +534,12 @@ public function blockValidate($form, FormStateInterface $form_state): void {
 ### @Plugin Annotation
 ```php
 @Plugin(
-    id = "unique_plugin_id",
-    label = @Translation("Human Readable Label"),
-    description = @Translation("Plugin description"),
-    category = @Translation("Plugin Category"),
-    admin_label = @Translation("Admin Label"),
-    ...type-specific options
+  id = "unique_plugin_id",
+  label = @Translation("Human Readable Label"),
+  description = @Translation("Plugin description"),
+  category = @Translation("Plugin Category"),
+  admin_label = @Translation("Admin Label"),
+  ...type-specific options
 )
 ```
 

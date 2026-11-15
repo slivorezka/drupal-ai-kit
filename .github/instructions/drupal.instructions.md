@@ -205,21 +205,21 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class MyEventSubscriber implements EventSubscriberInterface {
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents(): array {
-        return [
-            'my_module.custom_event' => 'onCustomEvent',
-        ];
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSubscribedEvents(): array {
+    return [
+      'my_module.custom_event' => 'onCustomEvent',
+    ];
+  }
 
-    /**
-     * Handles custom event.
-     */
-    public function onCustomEvent(CustomEvent $event): void {
-        // Handle event
-    }
+  /**
+   * Handles custom event.
+   */
+  public function onCustomEvent(CustomEvent $event): void {
+    // Handle event
+  }
 }
 ```
 
@@ -258,42 +258,42 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class MyController extends ControllerBase {
 
-    private MyService $myService;
+  private MyService $myService;
 
-    /**
-     * Constructor.
-     */
-    public function __construct(MyService $myService) {
-        $this->myService = $myService;
-    }
+  /**
+   * Constructor.
+   */
+  public function __construct(MyService $myService) {
+    $this->myService = $myService;
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('my_module.service')
-        );
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('my_module.service')
+    );
+  }
 
-    /**
-     * Responds with a page.
-     */
-    public function page(): array {
-        $data = $this->myService->getData();
-        return [
-            '#theme' => 'my_template',
-            '#data' => $data,
-        ];
-    }
+  /**
+   * Responds with a page.
+   */
+  public function page(): array {
+    $data = $this->myService->getData();
+    return [
+      '#theme' => 'my_template',
+      '#data' => $data,
+    ];
+  }
 
-    /**
-     * Responds with JSON.
-     */
-    public function jsonResponse(): JsonResponse {
-        $data = $this->myService->getData();
-        return new JsonResponse($data);
-    }
+  /**
+   * Responds with JSON.
+   */
+  public function jsonResponse(): JsonResponse {
+    $data = $this->myService->getData();
+    return new JsonResponse($data);
+  }
 }
 ```
 
@@ -341,37 +341,37 @@ use Psr\Log\LoggerInterface;
  */
 class DataProcessor {
 
-    /**
-     * Constructor.
-     */
-    public function __construct(
-        private readonly Connection $database,
-        private readonly EntityTypeManagerInterface $entityTypeManager,
-        private readonly LoggerInterface $logger,
-    ) {}
+  /**
+   * Constructor.
+   */
+  public function __construct(
+    private readonly Connection $database,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly LoggerInterface $logger,
+  ) {}
 
-    /**
-     * Processes data.
-     *
-     * @param array $data
-     *   Data to process.
-     *
-     * @return array
-     *   Processed data.
-     */
-    public function processData(array $data): array {
-        try {
-            $this->logger->info('Processing data');
+  /**
+   * Processes data.
+   *
+   * @param array $data
+   *   Data to process.
+   *
+   * @return array
+   *   Processed data.
+   */
+  public function processData(array $data): array {
+    try {
+      $this->logger->info('Processing data');
 
-            // Business logic here
-            $result = [];
+      // Business logic here
+      $result = [];
 
-            return $result;
-        } catch (\Exception $e) {
-            $this->logger->error('Error: @message', ['@message' => $e->getMessage()]);
-            throw $e;
-        }
+      return $result;
+    } catch (\Exception $e) {
+      $this->logger->error('Error: @message', ['@message' => $e->getMessage()]);
+      throw $e;
     }
+  }
 }
 ```
 
@@ -393,7 +393,7 @@ services:
 
 ```php
 public function __construct(
-    private DataProcessor $dataProcessor
+  private DataProcessor $dataProcessor
 ) {}
 ```
 
@@ -422,68 +422,68 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class MyForm extends FormBase {
 
-    public function __construct(
-        private DataProcessor $dataProcessor
-    ) {}
+  public function __construct(
+    private DataProcessor $dataProcessor
+  ) {}
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('my_module.data_processor')
-        );
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('my_module.data_processor')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'my_module_my_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $form['name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
+      '#required' => TRUE,
+    ];
+
+    $form['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Email'),
+      '#required' => TRUE,
+    ];
+
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Submit'),
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('email', $this->t('Invalid email'));
     }
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getFormId(): string {
-        return 'my_module_my_form';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function buildForm(array $form, FormStateInterface $form_state): array {
-        $form['name'] = [
-            '#type' => 'textfield',
-            '#title' => $this->t('Name'),
-            '#required' => TRUE,
-        ];
-
-        $form['email'] = [
-            '#type' => 'email',
-            '#title' => $this->t('Email'),
-            '#required' => TRUE,
-        ];
-
-        $form['actions']['submit'] = [
-            '#type' => 'submit',
-            '#value' => $this->t('Submit'),
-        ];
-
-        return $form;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function validateForm(array &$form, FormStateInterface $form_state): void {
-        $email = $form_state->getValue('email');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $form_state->setErrorByName('email', $this->t('Invalid email'));
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function submitForm(array &$form, FormStateInterface $form_state): void {
-        $data = $form_state->getValues();
-        $this->dataProcessor->processData($data);
-        $this->messenger()->addStatus($this->t('Form submitted successfully'));
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $data = $form_state->getValues();
+    $this->dataProcessor->processData($data);
+    $this->messenger()->addStatus($this->t('Form submitted successfully'));
+  }
 }
 ```
 
@@ -535,53 +535,53 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class EntityService {
 
-    public function __construct(
-        private EntityTypeManagerInterface $entityTypeManager
-    ) {}
+  public function __construct(
+    private EntityTypeManagerInterface $entityTypeManager
+  ) {}
 
-    /**
-     * Load a node by ID.
-     */
-    public function getNode(int $nid): ?object {
-        return $this->entityTypeManager
-            ->getStorage('node')
-            ->load($nid);
-    }
+  /**
+   * Load a node by ID.
+   */
+  public function getNode(int $nid): ?object {
+    return $this->entityTypeManager
+      ->getStorage('node')
+      ->load($nid);
+  }
 
-    /**
-     * Load multiple nodes.
-     */
-    public function getNodes(array $nids): array {
-        return $this->entityTypeManager
-            ->getStorage('node')
-            ->loadMultiple($nids);
-    }
+  /**
+   * Load multiple nodes.
+   */
+  public function getNodes(array $nids): array {
+    return $this->entityTypeManager
+      ->getStorage('node')
+      ->loadMultiple($nids);
+  }
 
-    /**
-     * Create and save a new node.
-     */
-    public function createNode(array $values): object {
-        $node = $this->entityTypeManager
-            ->getStorage('node')
-            ->create($values);
-        $node->save();
-        return $node;
-    }
+  /**
+   * Create and save a new node.
+   */
+  public function createNode(array $values): object {
+    $node = $this->entityTypeManager
+      ->getStorage('node')
+      ->create($values);
+    $node->save();
+    return $node;
+  }
 
-    /**
-     * Query entities.
-     */
-    public function queryNodes(string $type): array {
-        $query = $this->entityTypeManager
-            ->getStorage('node')
-            ->getQuery();
+  /**
+   * Query entities.
+   */
+  public function queryNodes(string $type): array {
+    $query = $this->entityTypeManager
+      ->getStorage('node')
+      ->getQuery();
 
-        return $query
-            ->condition('type', $type)
-            ->condition('status', 1)
-            ->sort('created', 'DESC')
-            ->execute();
-    }
+    return $query
+      ->condition('type', $type)
+      ->condition('status', 1)
+      ->sort('created', 'DESC')
+      ->execute();
+  }
 }
 ```
 
@@ -604,60 +604,60 @@ use Drupal\Core\Database\Connection;
 
 class DatabaseService {
 
-    public function __construct(
-        private Connection $database
-    ) {}
+  public function __construct(
+    private Connection $database
+  ) {}
 
-    /**
-     * Insert a record.
-     */
-    public function insertRecord(array $fields): int {
-        return $this->database->insert('my_module_table')
-            ->fields($fields)
-            ->execute();
-    }
+  /**
+   * Insert a record.
+   */
+  public function insertRecord(array $fields): int {
+    return $this->database->insert('my_module_table')
+      ->fields($fields)
+      ->execute();
+  }
 
-    /**
-     * Select records.
-     */
-    public function getRecords(int $limit = 10): array {
-        return $this->database->select('my_module_table', 'mmt')
-            ->fields('mmt')
-            ->condition('mmt.status', 1)
-            ->range(0, $limit)
-            ->orderBy('mmt.created', 'DESC')
-            ->execute()
-            ->fetchAllAssoc('id');
-    }
+  /**
+   * Select records.
+   */
+  public function getRecords(int $limit = 10): array {
+    return $this->database->select('my_module_table', 'mmt')
+      ->fields('mmt')
+      ->condition('mmt.status', 1)
+      ->range(0, $limit)
+      ->orderBy('mmt.created', 'DESC')
+      ->execute()
+      ->fetchAllAssoc('id');
+  }
 
-    /**
-     * Update a record.
-     */
-    public function updateRecord(int $id, array $fields): int {
-        return $this->database->update('my_module_table')
-            ->fields($fields)
-            ->condition('id', $id)
-            ->execute();
-    }
+  /**
+   * Update a record.
+   */
+  public function updateRecord(int $id, array $fields): int {
+    return $this->database->update('my_module_table')
+      ->fields($fields)
+      ->condition('id', $id)
+      ->execute();
+  }
 
-    /**
-     * Delete a record.
-     */
-    public function deleteRecord(int $id): int {
-        return $this->database->delete('my_module_table')
-            ->condition('id', $id)
-            ->execute();
-    }
+  /**
+   * Delete a record.
+   */
+  public function deleteRecord(int $id): int {
+    return $this->database->delete('my_module_table')
+      ->condition('id', $id)
+      ->execute();
+  }
 
-    /**
-     * Raw query with placeholders (if needed).
-     */
-    public function rawQuery(string $email): ?array {
-        return $this->database->query(
-            'SELECT * FROM {my_module_table} WHERE email = :email',
-            [':email' => $email]
-        )->fetchAssoc();
-    }
+  /**
+   * Raw query with placeholders (if needed).
+   */
+  public function rawQuery(string $email): ?array {
+    return $this->database->query(
+      'SELECT * FROM {my_module_table} WHERE email = :email',
+      [':email' => $email]
+    )->fetchAssoc();
+  }
 }
 ```
 
@@ -673,35 +673,35 @@ declare(strict_types=1);
  * Implements hook_schema().
  */
 function my_module_schema(): array {
-    $schema['my_module_table'] = [
-        'description' => 'Stores custom data.',
-        'fields' => [
-            'id' => [
-                'type' => 'serial',
-                'not null' => TRUE,
-                'description' => 'Primary key.',
-            ],
-            'email' => [
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'User email.',
-            ],
-            'created' => [
-                'type' => 'int',
-                'not null' => TRUE,
-                'default' => 0,
-                'description' => 'Creation timestamp.',
-            ],
-        ],
-        'primary key' => ['id'],
-        'indexes' => [
-            'email' => ['email'],
-            'created' => ['created'],
-        ],
-    ];
+  $schema['my_module_table'] = [
+    'description' => 'Stores custom data.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary key.',
+      ],
+      'email' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'User email.',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Creation timestamp.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'email' => ['email'],
+      'created' => ['created'],
+    ],
+  ];
 
-    return $schema;
+  return $schema;
 }
 ```
 
@@ -717,19 +717,19 @@ Keep templates logic-free. Use preprocessing for data preparation.
 {# templates/my-template.html.twig #}
 
 <div class="my-module-container">
-    <h1>{{ title }}</h1>
+  <h1>{{ title }}</h1>
 
-    {% if items %}
-        <ul class="my-module-list">
-            {% for item in items %}
-                <li class="my-module-item">
-                    {{ item.name }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>{{ empty_message }}</p>
-    {% endif %}
+  {% if items %}
+    <ul class="my-module-list">
+      {% for item in items %}
+        <li class="my-module-item">
+          {{ item.name }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>{{ empty_message }}</p>
+  {% endif %}
 </div>
 ```
 
@@ -782,14 +782,14 @@ Use render arrays in controllers:
 
 ```php
 public function page(): array {
-    return [
-        '#theme' => 'my_template',
-        '#title' => 'My Title',
-        '#items' => $this->getItems(),
-        '#attached' => [
-            'library' => ['my_module/my_library'],
-        ],
-    ];
+  return [
+    '#theme' => 'my_template',
+    '#title' => 'My Title',
+    '#items' => $this->getItems(),
+    '#attached' => [
+      'library' => ['my_module/my_library'],
+    ],
+  ];
 }
 ```
 
@@ -821,38 +821,38 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
  */
 class CustomBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
-    public function __construct(
-        array $configuration,
-        string $plugin_id,
-        array $plugin_definition,
-        private DataProcessor $dataProcessor
-    ) {
-        parent::__construct($configuration, $plugin_id, $plugin_definition);
-    }
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    private DataProcessor $dataProcessor
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
-        return new self(
-            $configuration,
-            $plugin_id,
-            $plugin_definition,
-            $container->get('my_module.data_processor')
-        );
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('my_module.data_processor')
+    );
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function build(): array {
-        $data = $this->dataProcessor->processData([]);
+  /**
+   * {@inheritdoc}
+   */
+  public function build(): array {
+    $data = $this->dataProcessor->processData([]);
 
-        return [
-            '#theme' => 'my_block_template',
-            '#data' => $data,
-        ];
-    }
+    return [
+      '#theme' => 'my_block_template',
+      '#data' => $data,
+    ];
+  }
 }
 ```
 
@@ -866,7 +866,7 @@ class CustomBlock extends BlockBase implements ContainerFactoryPluginInterface {
 // Validate
 $email = $form_state->getValue('email');
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $form_state->setErrorByName('email', t('Invalid email'));
+  $form_state->setErrorByName('email', t('Invalid email'));
 }
 
 // Sanitize strings
@@ -927,37 +927,37 @@ use Drupal\my_module\Service\DataProcessor;
  */
 class DataProcessorTest extends UnitTestCase {
 
-    private DataProcessor $dataProcessor;
+  private DataProcessor $dataProcessor;
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function setUp(): void {
-        parent::setUp();
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
 
-        // Mock dependencies
-        $this->dataProcessor = new DataProcessor();
-    }
+    // Mock dependencies
+    $this->dataProcessor = new DataProcessor();
+  }
 
-    /**
-     * Tests processData method.
-     */
-    public function testProcessDataSuccess(): void {
-        $input = ['key' => 'value'];
-        $result = $this->dataProcessor->processData($input);
+  /**
+   * Tests processData method.
+   */
+  public function testProcessDataSuccess(): void {
+    $input = ['key' => 'value'];
+    $result = $this->dataProcessor->processData($input);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('processed', $result);
-    }
+    $this->assertIsArray($result);
+    $this->assertArrayHasKey('processed', $result);
+  }
 
-    /**
-     * Tests processData with invalid input.
-     */
-    public function testProcessDataInvalid(): void {
-        $this->expectException(\InvalidArgumentException::class);
+  /**
+   * Tests processData with invalid input.
+   */
+  public function testProcessDataInvalid(): void {
+    $this->expectException(\InvalidArgumentException::class);
 
-        $this->dataProcessor->processData([]);
-    }
+    $this->dataProcessor->processData([]);
+  }
 }
 ```
 
@@ -979,21 +979,21 @@ use Drupal\KernelTests\KernelTestBase;
  */
 class DatabaseServiceKernelTest extends KernelTestBase {
 
-    protected static array $modules = ['my_module', 'node', 'user'];
+  protected static array $modules = ['my_module', 'node', 'user'];
 
-    /**
-     * Tests database query.
-     */
-    public function testDatabaseQuery(): void {
-        $service = $this->container->get('my_module.database_service');
+  /**
+   * Tests database query.
+   */
+  public function testDatabaseQuery(): void {
+    $service = $this->container->get('my_module.database_service');
 
-        // Insert test data
-        $service->insertRecord(['email' => 'test@example.com']);
+    // Insert test data
+    $service->insertRecord(['email' => 'test@example.com']);
 
-        // Query and verify
-        $records = $service->getRecords();
-        $this->assertCount(1, $records);
-    }
+    // Query and verify
+    $records = $service->getRecords();
+    $this->assertCount(1, $records);
+  }
 }
 ```
 
@@ -1037,7 +1037,7 @@ $timeout = $config->get('my_module.timeout');
 
 // Or via service
 public function __construct(
-    private ConfigFactoryInterface $configFactory
+  private ConfigFactoryInterface $configFactory
 ) {}
 
 $config = $this->configFactory->get('my_module.settings');
@@ -1057,7 +1057,7 @@ $data = ['item' => 'value'];
 // Get cached data
 $cache = \Drupal::cache('default')->get('my_key');
 if ($cache) {
-    $data = $cache->data;
+  $data = $cache->data;
 }
 
 // Invalidate cache
@@ -1068,11 +1068,11 @@ if ($cache) {
 
 ```php
 return [
-    '#cache' => [
-        'max-age' => 3600,
-        'tags' => ['my_module_tag'],
-        'contexts' => ['user'],
-    ],
+  '#cache' => [
+    'max-age' => 3600,
+    'tags' => ['my_module_tag'],
+    'contexts' => ['user'],
+  ],
 ];
 ```
 

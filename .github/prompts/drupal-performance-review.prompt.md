@@ -43,28 +43,28 @@ You are a Drupal 10 performance specialist. Conduct a comprehensive performance 
 ```php
 // ❌ PROBLEM: N+1 Query Pattern
 foreach ($nodes as $node) {
-    $author = User::load($node->getOwnerId());  // Query per iteration!
-    echo $author->getDisplayName();
+  $author = User::load($node->getOwnerId());  // Query per iteration!
+  echo $author->getDisplayName();
 }
 
 // ✅ SOLUTION: Batch Load
 $node_ids = array_map(function($node) { return $node->id(); }, $nodes);
 $users = User::loadMultiple(array_unique($uids));
 foreach ($nodes as $node) {
-    echo $users[$node->getOwnerId()]->getDisplayName();
+  echo $users[$node->getOwnerId()]->getDisplayName();
 }
 ```
 
 ```php
 // ❌ PROBLEM: Fetching All Fields
 $query = $this->database->select('users', 'u')
-    ->fields('u')  // Gets all columns!
-    ->execute();
+  ->fields('u')  // Gets all columns!
+  ->execute();
 
 // ✅ SOLUTION: Select Specific Fields
 $query = $this->database->select('users', 'u')
-    ->fields('u', ['uid', 'name', 'mail'])
-    ->execute();
+  ->fields('u', ['uid', 'name', 'mail'])
+  ->execute();
 ```
 
 ### 2. Caching Strategy
@@ -83,46 +83,46 @@ $query = $this->database->select('users', 'u')
 ```php
 // ❌ PROBLEM: No Caching
 function getExpensiveData($userId) {
-    $result = $this->database->select('big_table', 'bt')
-        ->condition('user_id', $userId)
-        ->execute()
-        ->fetchAll();
-    return $result;
+  $result = $this->database->select('big_table', 'bt')
+    ->condition('user_id', $userId)
+    ->execute()
+    ->fetchAll();
+  return $result;
 }
 
 // ✅ SOLUTION: Add Caching
 function getExpensiveData($userId) {
-    $cacheKey = 'expensive_data:' . $userId;
-    if ($cache = $this->cache->get($cacheKey)) {
-        return $cache->data;
-    }
+  $cacheKey = 'expensive_data:' . $userId;
+  if ($cache = $this->cache->get($cacheKey)) {
+    return $cache->data;
+  }
 
-    $result = $this->database->select('big_table', 'bt')
-        ->condition('user_id', $userId)
-        ->execute()
-        ->fetchAll();
+  $result = $this->database->select('big_table', 'bt')
+    ->condition('user_id', $userId)
+    ->execute()
+    ->fetchAll();
 
-    $this->cache->set($cacheKey, $result, CacheBackendInterface::CACHE_PERMANENT, ['user:' . $userId]);
-    return $result;
+  $this->cache->set($cacheKey, $result, CacheBackendInterface::CACHE_PERMANENT, ['user:' . $userId]);
+  return $result;
 }
 ```
 
 ```php
 // ❌ PROBLEM: Missing Cache Metadata in Render Array
 return [
-    '#theme' => 'my_template',
-    '#data' => $data,
+  '#theme' => 'my_template',
+  '#data' => $data,
 ];
 
 // ✅ SOLUTION: Add Cache Metadata
 return [
-    '#theme' => 'my_template',
-    '#data' => $data,
-    '#cache' => [
-        'max-age' => 3600,
-        'tags' => ['my_module_data'],
-        'contexts' => ['user'],
-    ],
+  '#theme' => 'my_template',
+  '#data' => $data,
+  '#cache' => [
+    'max-age' => 3600,
+    'tags' => ['my_module_data'],
+    'contexts' => ['user'],
+  ],
 ];
 ```
 
@@ -142,14 +142,14 @@ return [
 ```php
 // ❌ PROBLEM: Loop-Based Queries
 foreach ($ids as $id) {
-    $node = Node::load($id);  // Query for each item!
-    $processed[] = $node->getTitle();
+  $node = Node::load($id);  // Query for each item!
+  $processed[] = $node->getTitle();
 }
 
 // ✅ SOLUTION: Batch Load
 $nodes = Node::loadMultiple($ids);
 foreach ($nodes as $node) {
-    $processed[] = $node->getTitle();
+  $processed[] = $node->getTitle();
 }
 ```
 
@@ -157,13 +157,13 @@ foreach ($nodes as $node) {
 // ❌ PROBLEM: String Concatenation in Loop
 $output = '';
 foreach ($items as $item) {
-    $output .= $item->render();  // String copy each iteration!
+  $output .= $item->render();  // String copy each iteration!
 }
 
 // ✅ SOLUTION: Use Array
 $output = [];
 foreach ($items as $item) {
-    $output[] = $item->render();
+  $output[] = $item->render();
 }
 return implode('', $output);
 ```
@@ -187,10 +187,10 @@ $all_users = User::loadMultiple([]);  // Loads ALL users!
 
 // ✅ SOLUTION: Use Pagination/Limits
 $users = $this->database->select('users', 'u')
-    ->fields('u')
-    ->range(0, 100)
-    ->execute()
-    ->fetchAll();
+  ->fields('u')
+  ->range(0, 100)
+  ->execute()
+  ->fetchAll();
 ```
 
 ```php
@@ -201,9 +201,9 @@ $processed = array_map(..., $data);
 // ✅ SOLUTION: Process in Batches
 $batch_size = 1000;
 foreach (range(0, PHP_INT_MAX) as $offset) {
-    $data = $this->getProductDataBatch($offset, $batch_size);
-    if (empty($data)) break;
-    array_map(..., $data);
+  $data = $this->getProductDataBatch($offset, $batch_size);
+  if (empty($data)) break;
+  array_map(..., $data);
 }
 ```
 
@@ -223,16 +223,16 @@ foreach (range(0, PHP_INT_MAX) as $offset) {
 ```twig
 {# ❌ PROBLEM: Logic in Template #}
 {% for item in items %}
-    <div>
-        {{ getAuthorName(item.author_id) }}  {# Query per item! #}
-    </div>
+  <div>
+    {{ getAuthorName(item.author_id) }}  {# Query per item! #}
+  </div>
 {% endfor %}
 
 {# ✅ SOLUTION: Prepare Data in Preprocess #}
 {% for item in items %}
-    <div>
-        {{ item.author_name }}  {# Pre-loaded data #}
-    </div>
+  <div>
+    {{ item.author_name }}  {# Pre-loaded data #}
+  </div>
 {% endfor %}
 ```
 
@@ -253,12 +253,12 @@ foreach (range(0, PHP_INT_MAX) as $offset) {
 // ❌ PROBLEM: Multiple Entity Loads
 $data = [];
 foreach ($nids as $nid) {
-    $node = Node::load($nid);
-    $author = User::load($node->getOwnerId());
-    $data[] = [
-        'node' => $node,
-        'author' => $author,
-    ];
+  $node = Node::load($nid);
+  $author = User::load($node->getOwnerId());
+  $data[] = [
+    'node' => $node,
+    'author' => $author,
+  ];
 }
 
 // ✅ SOLUTION: Batch Load All
@@ -266,10 +266,10 @@ $nodes = Node::loadMultiple($nids);
 $uids = array_map(fn($n) => $n->getOwnerId(), $nodes);
 $users = User::loadMultiple(array_unique($uids));
 $data = array_map(function($node) use ($users) {
-    return [
-        'node' => $node,
-        'author' => $users[$node->getOwnerId()],
-    ];
+  return [
+    'node' => $node,
+    'author' => $users[$node->getOwnerId()],
+  ];
 }, $nodes);
 ```
 
@@ -288,15 +288,15 @@ $data = array_map(function($node) use ($users) {
 ```php
 // ❌ PROBLEM: Config Loaded in Loop
 foreach ($items as $item) {
-    $config = \Drupal::config('my_module.settings');
-    $value = $config->get('setting');
+  $config = \Drupal::config('my_module.settings');
+  $value = $config->get('setting');
 }
 
 // ✅ SOLUTION: Load Config Once
 $config = $this->configFactory->get('my_module.settings');
 $value = $config->get('setting');
 foreach ($items as $item) {
-    // Use $value
+  // Use $value
 }
 ```
 
@@ -376,7 +376,7 @@ foreach ($items as $item) {
 ```php
 // ❌ ANTI-PATTERN
 foreach ($nodes as $node) {
-    $related = Related::load($node->field_related);  // Query per iteration
+  $related = Related::load($node->field_related);  // Query per iteration
 }
 
 // ✅ PATTERN
@@ -388,17 +388,17 @@ $related_items = Related::loadMultiple($related_ids);
 ```php
 // ❌ ANTI-PATTERN
 for ($i = 0; $i < count($array); $i++) {  // count() called each iteration
-    echo $array[$i];
+  echo $array[$i];
 }
 
 // ✅ PATTERN
 $count = count($array);
 for ($i = 0; $i < $count; $i++) {
-    echo $array[$i];
+  echo $array[$i];
 }
 // OR
 foreach ($array as $item) {
-    echo $item;
+  echo $item;
 }
 ```
 
@@ -406,13 +406,13 @@ foreach ($array as $item) {
 ```php
 // ❌ ANTI-PATTERN
 function getUser($uid) {
-    return User::load($uid);  // Always queries
+  return User::load($uid);  // Always queries
 }
 
 // ✅ PATTERN
 function getUser($uid) {
-    static $users = [];
-    return $users[$uid] ?? ($users[$uid] = User::load($uid));
+  static $users = [];
+  return $users[$uid] ?? ($users[$uid] = User::load($uid));
 }
 ```
 
@@ -423,28 +423,28 @@ $result = $this->database->query('SELECT * FROM {users}')->fetchAll();
 
 // ✅ PATTERN
 $result = $this->database->select('users', 'u')
-    ->fields('u', ['uid', 'name'])
-    ->range(0, 100)
-    ->orderBy('u.uid', 'DESC')
-    ->execute()
-    ->fetchAll();
+  ->fields('u', ['uid', 'name'])
+  ->range(0, 100)
+  ->orderBy('u.uid', 'DESC')
+  ->execute()
+  ->fetchAll();
 ```
 
 ### 5. No Cache Metadata
 ```php
 // ❌ ANTI-PATTERN
 return [
-    '#markup' => $markup,
+  '#markup' => $markup,
 ];
 
 // ✅ PATTERN
 return [
-    '#markup' => $markup,
-    '#cache' => [
-        'max-age' => 86400,
-        'tags' => ['entity_type:node'],
-        'contexts' => ['user'],
-    ],
+  '#markup' => $markup,
+  '#cache' => [
+    'max-age' => 86400,
+    'tags' => ['entity_type:node'],
+    'contexts' => ['user'],
+  ],
 ];
 ```
 
@@ -469,7 +469,7 @@ $this->database->enableDebug();
 // Review query log
 $queries = $this->database->getDebugInfo();
 foreach ($queries as $query) {
-    echo $query['query'] . ' (' . $query['time'] . 'ms)';
+  echo $query['query'] . ' (' . $query['time'] . 'ms)';
 }
 ```
 
@@ -645,19 +645,19 @@ Slowest Query: 45ms
 ```php
 <?php
 function my_module_get_articles($limit = 10) {
-    $nodes = Node::loadByProperties(['type' => 'article']);
+  $nodes = Node::loadByProperties(['type' => 'article']);
 
-    $articles = [];
-    foreach ($nodes as $node) {
-        $user = User::load($node->getOwnerId());
-        $articles[] = [
-            'title' => $node->getTitle(),
-            'author' => $user->getDisplayName(),
-            'created' => date('Y-m-d', $node->getCreatedTime()),
-        ];
-    }
+  $articles = [];
+  foreach ($nodes as $node) {
+    $user = User::load($node->getOwnerId());
+    $articles[] = [
+      'title' => $node->getTitle(),
+      'author' => $user->getDisplayName(),
+      'created' => date('Y-m-d', $node->getCreatedTime()),
+    ];
+  }
 
-    return array_slice($articles, 0, $limit);
+  return array_slice($articles, 0, $limit);
 }
 ```
 
@@ -680,23 +680,23 @@ function my_module_get_articles($limit = 10) {
 declare(strict_types=1);
 
 function my_module_get_articles(int $limit = 10): array {
-    $node_query = \Drupal::entityQuery('node')
-        ->condition('type', 'article')
-        ->range(0, $limit)
-        ->sort('created', 'DESC')
-        ->execute();
+  $node_query = \Drupal::entityQuery('node')
+    ->condition('type', 'article')
+    ->range(0, $limit)
+    ->sort('created', 'DESC')
+    ->execute();
 
-    $nodes = Node::loadMultiple($node_query);
-    $uids = array_unique(array_map(fn($n) => $n->getOwnerId(), $nodes));
-    $users = User::loadMultiple($uids);
+  $nodes = Node::loadMultiple($node_query);
+  $uids = array_unique(array_map(fn($n) => $n->getOwnerId(), $nodes));
+  $users = User::loadMultiple($uids);
 
-    return array_map(function($node) use ($users) {
-        return [
-            'title' => $node->getTitle(),
-            'author' => $users[$node->getOwnerId()]->getDisplayName(),
-            'created' => date('Y-m-d', $node->getCreatedTime()),
-        ];
-    }, $nodes);
+  return array_map(function($node) use ($users) {
+    return [
+      'title' => $node->getTitle(),
+      'author' => $users[$node->getOwnerId()]->getDisplayName(),
+      'created' => date('Y-m-d', $node->getCreatedTime()),
+    ];
+  }, $nodes);
 }
 ```
 

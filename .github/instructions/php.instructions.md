@@ -44,11 +44,11 @@ namespace Drupal\my_module;
 
 ```php
 public function getUserById(int $id): ?User {
-    // ...
+  // ...
 }
 
 public function validateEmail(string $email): bool {
-    // ...
+  // ...
 }
 ```
 
@@ -58,7 +58,7 @@ public function validateEmail(string $email): bool {
 
 ```php
 private function processData(string $input, int $count): void {
-    // ...
+  // ...
 }
 ```
 
@@ -85,7 +85,7 @@ public bool $isActive;
  * This service handles user creation, deletion, and updates.
  */
 class UserService {
-    // ...
+  // ...
 }
 ```
 
@@ -108,7 +108,7 @@ class UserService {
  *   If the entity load fails.
  */
 public function getUser(int $userId): ?User {
-    // ...
+  // ...
 }
 ```
 
@@ -160,25 +160,25 @@ final class NodeHooks {
  */
 class UserService {
 
-    /**
-     * The database service.
-     */
-    private Database $database;
+  /**
+   * The database service.
+   */
+  private Database $database;
 
-    /**
-     * Constructor.
-     *
-     * @param \Drupal\Core\Database\Connection $database
-     *   The database service.
-     */
-    public function __construct(Connection $database) {
-        $this->database = $database;
-    }
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database service.
+   */
+  public function __construct(Connection $database) {
+    $this->database = $database;
+  }
 
-    public function getUserById(int $userId): ?array {
-        return $this->database->query(...)
-            ->fetchAssoc();
-    }
+  public function getUserById(int $userId): ?array {
+    return $this->database->query(...)
+      ->fetchAssoc();
+  }
 }
 ```
 
@@ -208,18 +208,18 @@ services:
  */
 class UserController extends ControllerBase {
 
-    public function __construct(
-        private UserService $userService
-    ) {}
+  public function __construct(
+    private UserService $userService
+  ) {}
 
-    public function getUser(int $userId): Response {
-        try {
-            $user = $this->userService->getUser($userId);
-            return new JsonResponse($user);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 400);
-        }
+  public function getUser(int $userId): Response {
+    try {
+      $user = $this->userService->getUser($userId);
+      return new JsonResponse($user);
+    } catch (\Exception $e) {
+      return new JsonResponse(['error' => $e->getMessage()], 400);
     }
+  }
 }
 ```
 
@@ -236,8 +236,8 @@ $result = \Drupal::database()->query("SELECT * FROM users WHERE id = $id");
 
 // ✅ CORRECT
 $result = $this->database->query(
-    'SELECT * FROM {users} WHERE id = :id',
-    [':id' => $id]
+  'SELECT * FROM {users} WHERE id = :id',
+  [':id' => $id]
 );
 ```
 
@@ -247,8 +247,8 @@ $result = $this->database->query(
 
 ```php
 $user = \Drupal::entityTypeManager()
-    ->getStorage('user')
-    ->load($userId);
+  ->getStorage('user')
+  ->load($userId);
 ```
 
 ### Form API
@@ -269,10 +269,10 @@ $user = \Drupal::entityTypeManager()
  * @throws \InvalidArgumentException
  */
 public function processUser(int $userId): void {
-    if ($userId <= 0) {
-        throw new \InvalidArgumentException('User ID must be positive');
-    }
-    // ...
+  if ($userId <= 0) {
+    throw new \InvalidArgumentException('User ID must be positive');
+  }
+  // ...
 }
 ```
 
@@ -298,9 +298,9 @@ $this->logger->error('Failed to process user @id', ['@id' => $userId]);
 
 ```php
 $config = [
-    'id' => 'user_1',
-    'name' => 'John Doe',
-    'email' => 'john@example.com',
+  'id' => 'user_1',
+  'name' => 'John Doe',
+  'email' => 'john@example.com',
 ];
 ```
 
@@ -311,11 +311,11 @@ $config = [
 
 ```php
 if ($isActive) {
-    doSomething();
+  doSomething();
 } elseif ($isPending) {
-    doOtherThing();
+  doOtherThing();
 } else {
-    doDefault();
+  doDefault();
 }
 ```
 
@@ -336,7 +336,7 @@ if ($isActive) {
 
 ```php
 if (!$this->currentUser->hasPermission('manage users')) {
-    throw new AccessDeniedException();
+  throw new AccessDeniedException();
 }
 ```
 
@@ -361,17 +361,17 @@ if (!$this->currentUser->hasPermission('manage users')) {
  */
 class UserServiceTest extends UnitTestCase {
 
-    public function testGetUserByIdSuccess(): void {
-        // Arrange
-        // Act
-        // Assert
-    }
+  public function testGetUserByIdSuccess(): void {
+    // Arrange
+    // Act
+    // Assert
+  }
 
-    public function testGetUserByIdNotFound(): void {
-        // Arrange
-        // Act
-        // Assert
-    }
+  public function testGetUserByIdNotFound(): void {
+    // Arrange
+    // Act
+    // Assert
+  }
 }
 ```
 

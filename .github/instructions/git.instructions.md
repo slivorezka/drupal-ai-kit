@@ -956,17 +956,17 @@ git checkout <commit-hash>
 ```bash
 # Add to ~/.gitconfig
 [alias]
-    st = status
-    co = checkout
-    br = branch
-    ci = commit
-    lg = log --oneline --graph --all
-    up = pull --rebase
-    unstage = reset HEAD --
-    last = log -1 HEAD
-    undo = reset --soft HEAD~1
-    amend = commit --amend --no-edit
-    clean-branches = branch -vv | grep gone | awk '{print $1}' | xargs git branch -D
+  st = status
+  co = checkout
+  br = branch
+  ci = commit
+  lg = log --oneline --graph --all
+  up = pull --rebase
+  unstage = reset HEAD --
+  last = log -1 HEAD
+  undo = reset --soft HEAD~1
+  amend = commit --amend --no-edit
+  clean-branches = branch -vv | grep gone | awk '{print $1}' | xargs git branch -D
 ```
 
 ### Git Hooks Setup
@@ -981,8 +981,8 @@ chmod +x .git/hooks/pre-commit
 # Run PHP Code Sniffer
 vendor/bin/phpcs public/modules/custom public/themes/custom
 if [ $? -ne 0 ]; then
-    echo "Fix code style issues before committing"
-    exit 1
+  echo "Fix code style issues before committing"
+  exit 1
 fi
 ```
 

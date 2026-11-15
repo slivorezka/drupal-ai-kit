@@ -60,31 +60,31 @@ use [Required imports];
  */
 class {ServiceName} {
 
-    /**
-     * Constructor.
-     *
-     * @param [Type] ${param}
-     *   Description of the parameter.
-     */
-    public function __construct(
-        private readonly [Type] ${param},
-    ) {}
+  /**
+   * Constructor.
+   *
+   * @param [Type] ${param}
+   *   Description of the parameter.
+   */
+  public function __construct(
+    private readonly [Type] ${param},
+  ) {}
 
-    /**
-     * Method description.
-     *
-     * @param [Type] ${param}
-     *   Parameter description.
-     *
-     * @return [ReturnType]
-     *   Description of return value.
-     *
-     * @throws [ExceptionType]
-     *   When something goes wrong.
-     */
-    public function methodName([Type] ${param}): [ReturnType] {
-        // Implementation
-    }
+  /**
+   * Method description.
+   *
+   * @param [Type] ${param}
+   *   Parameter description.
+   *
+   * @return [ReturnType]
+   *   Description of return value.
+   *
+   * @throws [ExceptionType]
+   *   When something goes wrong.
+   */
+  public function methodName([Type] ${param}): [ReturnType] {
+    // Implementation
+  }
 }
 ```
 
@@ -156,197 +156,197 @@ use Psr\Log\LoggerInterface;
  */
 class UserProfileService {
 
-    /**
-     * Constructor.
-     *
-     * @param \Drupal\Core\Database\Connection $database
-     *   The database connection service.
-     * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-     *   The entity type manager service.
-     * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
-     *   The current user service.
-     * @param \Psr\Log\LoggerInterface $logger
-     *   The logger service.
-     */
-    public function __construct(
-        private readonly Connection $database,
-        private readonly EntityTypeManagerInterface $entityTypeManager,
-        private readonly AccountProxyInterface $currentUser,
-        private readonly LoggerInterface $logger,
-    ) {}
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
+   *   The current user service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   */
+  public function __construct(
+    private readonly Connection $database,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly AccountProxyInterface $currentUser,
+    private readonly LoggerInterface $logger,
+  ) {}
 
-    /**
-     * Retrieves a user profile by user ID.
-     *
-     * @param int $userId
-     *   The user ID.
-     *
-     * @return array|null
-     *   The user profile data, or NULL if not found.
-     *
-     * @throws \Exception
-     *   If database query fails.
-     *
-     * @example
-     * @code
-     * $profile = $userProfileService->getUserProfile(42);
-     * if ($profile) {
-     *   echo $profile['name'];
-     * }
-     * @endcode
-     */
-    public function getUserProfile(int $userId): ?array {
-        try {
-            $query = $this->database->select('user_profiles', 'up')
-                ->fields('up')
-                ->condition('up.uid', $userId)
-                ->execute();
+  /**
+   * Retrieves a user profile by user ID.
+   *
+   * @param int $userId
+   *   The user ID.
+   *
+   * @return array|null
+   *   The user profile data, or NULL if not found.
+   *
+   * @throws \Exception
+   *   If database query fails.
+   *
+   * @example
+   * @code
+   * $profile = $userProfileService->getUserProfile(42);
+   * if ($profile) {
+   *   echo $profile['name'];
+   * }
+   * @endcode
+   */
+  public function getUserProfile(int $userId): ?array {
+    try {
+      $query = $this->database->select('user_profiles', 'up')
+        ->fields('up')
+        ->condition('up.uid', $userId)
+        ->execute();
 
-            $profile = $query->fetchAssoc();
+      $profile = $query->fetchAssoc();
 
-            if ($profile) {
-                $this->logger->info('Retrieved profile for user @uid', ['@uid' => $userId]);
-            }
+      if ($profile) {
+        $this->logger->info('Retrieved profile for user @uid', ['@uid' => $userId]);
+      }
 
-            return $profile;
-        } catch (\Exception $e) {
-            $this->logger->error('Error retrieving profile: @message', ['@message' => $e->getMessage()]);
-            throw $e;
-        }
+      return $profile;
+    } catch (\Exception $e) {
+      $this->logger->error('Error retrieving profile: @message', ['@message' => $e->getMessage()]);
+      throw $e;
+    }
+  }
+
+  /**
+   * Updates user profile information.
+   *
+   * @param int $userId
+   *   The user ID.
+   * @param array $data
+   *   The profile data to update.
+   *
+   * @return int
+   *   Number of affected rows.
+   *
+   * @throws \InvalidArgumentException
+   *   If user ID is invalid or data is empty.
+   *
+   * @example
+   * @code
+   * $updated = $userProfileService->updateUserProfile(42, [
+   *   'name' => 'John Doe',
+   *   'bio' => 'Software developer',
+   * ]);
+   * @endcode
+   */
+  public function updateUserProfile(int $userId, array $data): int {
+    if ($userId <= 0) {
+      throw new \InvalidArgumentException('User ID must be positive');
     }
 
-    /**
-     * Updates user profile information.
-     *
-     * @param int $userId
-     *   The user ID.
-     * @param array $data
-     *   The profile data to update.
-     *
-     * @return int
-     *   Number of affected rows.
-     *
-     * @throws \InvalidArgumentException
-     *   If user ID is invalid or data is empty.
-     *
-     * @example
-     * @code
-     * $updated = $userProfileService->updateUserProfile(42, [
-     *   'name' => 'John Doe',
-     *   'bio' => 'Software developer',
-     * ]);
-     * @endcode
-     */
-    public function updateUserProfile(int $userId, array $data): int {
-        if ($userId <= 0) {
-            throw new \InvalidArgumentException('User ID must be positive');
-        }
-
-        if (empty($data)) {
-            throw new \InvalidArgumentException('Profile data cannot be empty');
-        }
-
-        try {
-            $rows = $this->database->update('user_profiles')
-                ->fields($data)
-                ->condition('uid', $userId)
-                ->execute();
-
-            $this->logger->info('Updated profile for user @uid', ['@uid' => $userId]);
-
-            return $rows;
-        } catch (\Exception $e) {
-            $this->logger->error('Error updating profile: @message', ['@message' => $e->getMessage()]);
-            throw $e;
-        }
+    if (empty($data)) {
+      throw new \InvalidArgumentException('Profile data cannot be empty');
     }
 
-    /**
-     * Deletes a user profile.
-     *
-     * @param int $userId
-     *   The user ID.
-     *
-     * @return int
-     *   Number of affected rows.
-     *
-     * @throws \InvalidArgumentException
-     *   If user ID is invalid.
-     * @throws \RuntimeException
-     *   If user does not have permission to delete.
-     *
-     * @example
-     * @code
-     * $deleted = $userProfileService->deleteUserProfile(42);
-     * @endcode
-     */
-    public function deleteUserProfile(int $userId): int {
-        if ($userId <= 0) {
-            throw new \InvalidArgumentException('User ID must be positive');
-        }
+    try {
+      $rows = $this->database->update('user_profiles')
+        ->fields($data)
+        ->condition('uid', $userId)
+        ->execute();
 
-        if (!$this->currentUser->hasPermission('delete user profiles')) {
-            throw new \RuntimeException('User does not have permission to delete profiles');
-        }
+      $this->logger->info('Updated profile for user @uid', ['@uid' => $userId]);
 
-        try {
-            $rows = $this->database->delete('user_profiles')
-                ->condition('uid', $userId)
-                ->execute();
+      return $rows;
+    } catch (\Exception $e) {
+      $this->logger->error('Error updating profile: @message', ['@message' => $e->getMessage()]);
+      throw $e;
+    }
+  }
 
-            $this->logger->notice('Deleted profile for user @uid', ['@uid' => $userId]);
-
-            return $rows;
-        } catch (\Exception $e) {
-            $this->logger->error('Error deleting profile: @message', ['@message' => $e->getMessage()]);
-            throw $e;
-        }
+  /**
+   * Deletes a user profile.
+   *
+   * @param int $userId
+   *   The user ID.
+   *
+   * @return int
+   *   Number of affected rows.
+   *
+   * @throws \InvalidArgumentException
+   *   If user ID is invalid.
+   * @throws \RuntimeException
+   *   If user does not have permission to delete.
+   *
+   * @example
+   * @code
+   * $deleted = $userProfileService->deleteUserProfile(42);
+   * @endcode
+   */
+  public function deleteUserProfile(int $userId): int {
+    if ($userId <= 0) {
+      throw new \InvalidArgumentException('User ID must be positive');
     }
 
-    /**
-     * Retrieves a list of user profiles.
-     *
-     * @param int $limit
-     *   Maximum number of profiles to retrieve.
-     * @param int $offset
-     *   Number of profiles to skip.
-     *
-     * @return array
-     *   Array of user profiles.
-     *
-     * @throws \InvalidArgumentException
-     *   If limit or offset is negative.
-     *
-     * @example
-     * @code
-     * $profiles = $userProfileService->getUserProfiles(10, 0);
-     * foreach ($profiles as $profile) {
-     *   echo $profile['name'];
-     * }
-     * @endcode
-     */
-    public function getUserProfiles(int $limit = 10, int $offset = 0): array {
-        if ($limit < 0 || $offset < 0) {
-            throw new \InvalidArgumentException('Limit and offset must be non-negative');
-        }
-
-        try {
-            $query = $this->database->select('user_profiles', 'up')
-                ->fields('up')
-                ->range($offset, $limit)
-                ->orderBy('up.created', 'DESC')
-                ->execute();
-
-            $profiles = $query->fetchAllAssoc('uid');
-
-            $this->logger->debug('Retrieved @count profiles', ['@count' => count($profiles)]);
-
-            return $profiles;
-        } catch (\Exception $e) {
-            $this->logger->error('Error retrieving profiles: @message', ['@message' => $e->getMessage()]);
-            throw $e;
-        }
+    if (!$this->currentUser->hasPermission('delete user profiles')) {
+      throw new \RuntimeException('User does not have permission to delete profiles');
     }
+
+    try {
+      $rows = $this->database->delete('user_profiles')
+        ->condition('uid', $userId)
+        ->execute();
+
+      $this->logger->notice('Deleted profile for user @uid', ['@uid' => $userId]);
+
+      return $rows;
+    } catch (\Exception $e) {
+      $this->logger->error('Error deleting profile: @message', ['@message' => $e->getMessage()]);
+      throw $e;
+    }
+  }
+
+  /**
+   * Retrieves a list of user profiles.
+   *
+   * @param int $limit
+   *   Maximum number of profiles to retrieve.
+   * @param int $offset
+   *   Number of profiles to skip.
+   *
+   * @return array
+   *   Array of user profiles.
+   *
+   * @throws \InvalidArgumentException
+   *   If limit or offset is negative.
+   *
+   * @example
+   * @code
+   * $profiles = $userProfileService->getUserProfiles(10, 0);
+   * foreach ($profiles as $profile) {
+   *   echo $profile['name'];
+   * }
+   * @endcode
+   */
+  public function getUserProfiles(int $limit = 10, int $offset = 0): array {
+    if ($limit < 0 || $offset < 0) {
+      throw new \InvalidArgumentException('Limit and offset must be non-negative');
+    }
+
+    try {
+      $query = $this->database->select('user_profiles', 'up')
+        ->fields('up')
+        ->range($offset, $limit)
+        ->orderBy('up.created', 'DESC')
+        ->execute();
+
+      $profiles = $query->fetchAllAssoc('uid');
+
+      $this->logger->debug('Retrieved @count profiles', ['@count' => count($profiles)]);
+
+      return $profiles;
+    } catch (\Exception $e) {
+      $this->logger->error('Error retrieving profiles: @message', ['@message' => $e->getMessage()]);
+      throw $e;
+    }
+  }
 }
 ```
 
@@ -379,48 +379,48 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class UserProfileController extends ControllerBase {
 
-    private UserProfileService $profileService;
+  private UserProfileService $profileService;
 
-    /**
-     * Constructor.
-     *
-     * @param \Drupal\user_profiles\Service\UserProfileService $profileService
-     *   The user profile service.
-     */
-    public function __construct(UserProfileService $profileService) {
-        $this->profileService = $profileService;
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\user_profiles\Service\UserProfileService $profileService
+   *   The user profile service.
+   */
+  public function __construct(UserProfileService $profileService) {
+    $this->profileService = $profileService;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('user_profiles.profile_service')
+    );
+  }
+
+  /**
+   * Displays a user profile.
+   *
+   * @param int $userId
+   *   The user ID.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function view(int $userId): array {
+    $profile = $this->profileService->getUserProfile($userId);
+
+    if (!$profile) {
+      throw new \Drupal\Core\Http\Exception\NotFoundHttpException();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('user_profiles.profile_service')
-        );
-    }
-
-    /**
-     * Displays a user profile.
-     *
-     * @param int $userId
-     *   The user ID.
-     *
-     * @return array
-     *   A render array.
-     */
-    public function view(int $userId): array {
-        $profile = $this->profileService->getUserProfile($userId);
-
-        if (!$profile) {
-            throw new \Drupal\Core\Http\Exception\NotFoundHttpException();
-        }
-
-        return [
-            '#theme' => 'user_profile',
-            '#profile' => $profile,
-        ];
-    }
+    return [
+      '#theme' => 'user_profile',
+      '#profile' => $profile,
+    ];
+  }
 }
 ```
 

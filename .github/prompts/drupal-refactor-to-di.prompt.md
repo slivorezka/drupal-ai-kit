@@ -49,14 +49,14 @@ You are a Drupal 10 refactoring expert. Refactor the provided code to use proper
 **Before:**
 ```php
 function my_module_node_insert(EntityInterface $entity): void {
-    $database = \Drupal::database();
-    $logger = \Drupal::logger('my_module');
+  $database = \Drupal::database();
+  $logger = \Drupal::logger('my_module');
 
-    $database->insert('my_table')
-        ->fields(['nid' => $entity->id()])
-        ->execute();
+  $database->insert('my_table')
+    ->fields(['nid' => $entity->id()])
+    ->execute();
 
-    $logger->info('Node created: @nid', ['@nid' => $entity->id()]);
+  $logger->info('Node created: @nid', ['@nid' => $entity->id()]);
 }
 ```
 
@@ -112,19 +112,19 @@ final class NodeHooks {
 **Before:**
 ```php
 class MyController extends ControllerBase {
-    public function list(): array {
-        $database = \Drupal::database();
-        $entityTypeManager = \Drupal::entityTypeManager();
-        $currentUser = \Drupal::currentUser();
+  public function list(): array {
+    $database = \Drupal::database();
+    $entityTypeManager = \Drupal::entityTypeManager();
+    $currentUser = \Drupal::currentUser();
 
-        $result = $database->select('my_table', 'mt')
-            ->fields('mt')
-            ->execute();
+    $result = $database->select('my_table', 'mt')
+      ->fields('mt')
+      ->execute();
 
-        $items = $result->fetchAll();
+    $items = $result->fetchAll();
 
-        return ['#items' => $items];
-    }
+    return ['#items' => $items];
+  }
 }
 ```
 
@@ -144,29 +144,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MyController extends ControllerBase {
 
-    public function __construct(
-        private readonly Connection $database,
-        private readonly EntityTypeManagerInterface $entityTypeManager,
-        private readonly AccountProxyInterface $currentUser,
-    ) {}
+  public function __construct(
+    private readonly Connection $database,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly AccountProxyInterface $currentUser,
+  ) {}
 
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('database'),
-            $container->get('entity_type.manager'),
-            $container->get('current_user'),
-        );
-    }
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('database'),
+      $container->get('entity_type.manager'),
+      $container->get('current_user'),
+    );
+  }
 
-    public function list(): array {
-        $result = $this->database->select('my_table', 'mt')
-            ->fields('mt')
-            ->execute();
+  public function list(): array {
+    $result = $this->database->select('my_table', 'mt')
+      ->fields('mt')
+      ->execute();
 
-        $items = $result->fetchAll();
+    $items = $result->fetchAll();
 
-        return ['#items' => $items];
-    }
+    return ['#items' => $items];
+  }
 }
 ```
 
@@ -174,24 +174,24 @@ class MyController extends ControllerBase {
 **Before:**
 ```php
 class MyForm extends FormBase {
-    public function buildForm(array $form, FormStateInterface $form_state): array {
-        $config = \Drupal::config('my_module.settings');
-        $configFactory = \Drupal::configFactory();
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = \Drupal::config('my_module.settings');
+    $configFactory = \Drupal::configFactory();
 
-        $form['setting'] = [
-            '#type' => 'textfield',
-            '#default_value' => $config->get('setting'),
-        ];
+    $form['setting'] = [
+      '#type' => 'textfield',
+      '#default_value' => $config->get('setting'),
+    ];
 
-        return $form;
-    }
+    return $form;
+  }
 
-    public function submitForm(array &$form, FormStateInterface $form_state): void {
-        \Drupal::configFactory()
-            ->getEditable('my_module.settings')
-            ->set('setting', $form_state->getValue('setting'))
-            ->save();
-    }
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    \Drupal::configFactory()
+      ->getEditable('my_module.settings')
+      ->set('setting', $form_state->getValue('setting'))
+      ->save();
+  }
 }
 ```
 
@@ -210,37 +210,37 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MyForm extends FormBase {
 
-    public function __construct(
-        private readonly ConfigFactoryInterface $configFactory,
-    ) {}
+  public function __construct(
+    private readonly ConfigFactoryInterface $configFactory,
+  ) {}
 
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('config.factory'),
-        );
-    }
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('config.factory'),
+    );
+  }
 
-    public function getFormId(): string {
-        return 'my_module_my_form';
-    }
+  public function getFormId(): string {
+    return 'my_module_my_form';
+  }
 
-    public function buildForm(array $form, FormStateInterface $form_state): array {
-        $config = $this->configFactory->get('my_module.settings');
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = $this->configFactory->get('my_module.settings');
 
-        $form['setting'] = [
-            '#type' => 'textfield',
-            '#default_value' => $config->get('setting'),
-        ];
+    $form['setting'] = [
+      '#type' => 'textfield',
+      '#default_value' => $config->get('setting'),
+    ];
 
-        return $form;
-    }
+    return $form;
+  }
 
-    public function submitForm(array &$form, FormStateInterface $form_state): void {
-        $this->configFactory
-            ->getEditable('my_module.settings')
-            ->set('setting', $form_state->getValue('setting'))
-            ->save();
-    }
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $this->configFactory
+      ->getEditable('my_module.settings')
+      ->set('setting', $form_state->getValue('setting'))
+      ->save();
+  }
 }
 ```
 
@@ -248,17 +248,17 @@ class MyForm extends FormBase {
 **Before:**
 ```php
 class MyBlock extends BlockBase {
-    public function build(): array {
-        $entityTypeManager = \Drupal::entityTypeManager();
-        $logger = \Drupal::logger('my_module');
+  public function build(): array {
+    $entityTypeManager = \Drupal::entityTypeManager();
+    $logger = \Drupal::logger('my_module');
 
-        $nodes = $entityTypeManager->getStorage('node')
-            ->loadByProperties(['status' => 1]);
+    $nodes = $entityTypeManager->getStorage('node')
+      ->loadByProperties(['status' => 1]);
 
-        $logger->info('Loaded @count nodes', ['@count' => count($nodes)]);
+    $logger->info('Loaded @count nodes', ['@count' => count($nodes)]);
 
-        return ['#nodes' => $nodes];
-    }
+    return ['#nodes' => $nodes];
+  }
 }
 ```
 
@@ -286,39 +286,39 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class MyBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
-    public function __construct(
-        array $configuration,
-        string $plugin_id,
-        mixed $plugin_definition,
-        private readonly EntityTypeManagerInterface $entityTypeManager,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct($configuration, $plugin_id, $plugin_definition);
-    }
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly LoggerInterface $logger,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
-    public static function create(
-        ContainerInterface $container,
-        array $configuration,
-        $plugin_id,
-        $plugin_definition,
-    ): self {
-        return new self(
-            $configuration,
-            $plugin_id,
-            $plugin_definition,
-            $container->get('entity_type.manager'),
-            $container->get('logger.channel.my_module'),
-        );
-    }
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('logger.channel.my_module'),
+    );
+  }
 
-    public function build(): array {
-        $nodes = $this->entityTypeManager->getStorage('node')
-            ->loadByProperties(['status' => 1]);
+  public function build(): array {
+    $nodes = $this->entityTypeManager->getStorage('node')
+      ->loadByProperties(['status' => 1]);
 
-        $this->logger->info('Loaded @count nodes', ['@count' => count($nodes)]);
+    $this->logger->info('Loaded @count nodes', ['@count' => count($nodes)]);
 
-        return ['#nodes' => $nodes];
-    }
+    return ['#nodes' => $nodes];
+  }
 }
 ```
 
@@ -326,28 +326,28 @@ class MyBlock extends BlockBase implements ContainerFactoryPluginInterface {
 **Before:**
 ```php
 class DataService {
-    private Database $database;
+  private Database $database;
 
-    public function __construct(Connection $database) {
-        $this->database = $database;
+  public function __construct(Connection $database) {
+    $this->database = $database;
+  }
+
+  public function processData(int $id): array {
+    $config = \Drupal::config('my_module.settings');
+    $logger = \Drupal::logger('my_module');
+
+    $data = $this->database->select('my_data', 'md')
+      ->condition('id', $id)
+      ->execute()
+      ->fetchAssoc();
+
+    if (!$data) {
+      $logger->warning('Data not found: @id', ['@id' => $id]);
+      return [];
     }
 
-    public function processData(int $id): array {
-        $config = \Drupal::config('my_module.settings');
-        $logger = \Drupal::logger('my_module');
-
-        $data = $this->database->select('my_data', 'md')
-            ->condition('id', $id)
-            ->execute()
-            ->fetchAssoc();
-
-        if (!$data) {
-            $logger->warning('Data not found: @id', ['@id' => $id]);
-            return [];
-        }
-
-        return $data;
-    }
+    return $data;
+  }
 }
 ```
 
@@ -365,27 +365,27 @@ use Psr\Log\LoggerInterface;
 
 class DataService {
 
-    public function __construct(
-        private readonly Connection $database,
-        private readonly ConfigFactoryInterface $configFactory,
-        private readonly LoggerInterface $logger,
-    ) {}
+  public function __construct(
+    private readonly Connection $database,
+    private readonly ConfigFactoryInterface $configFactory,
+    private readonly LoggerInterface $logger,
+  ) {}
 
-    public function processData(int $id): array {
-        $config = $this->configFactory->get('my_module.settings');
+  public function processData(int $id): array {
+    $config = $this->configFactory->get('my_module.settings');
 
-        $data = $this->database->select('my_data', 'md')
-            ->condition('id', $id)
-            ->execute()
-            ->fetchAssoc();
+    $data = $this->database->select('my_data', 'md')
+      ->condition('id', $id)
+      ->execute()
+      ->fetchAssoc();
 
-        if (!$data) {
-            $this->logger->warning('Data not found: @id', ['@id' => $id]);
-            return [];
-        }
-
-        return $data;
+    if (!$data) {
+      $this->logger->warning('Data not found: @id', ['@id' => $id]);
+      return [];
     }
+
+    return $data;
+  }
 }
 ```
 
@@ -480,9 +480,9 @@ services:
 ### Before: Static Calls in Hook
 ```php
 function my_module_node_insert(EntityInterface $entity): void {
-    $database = \Drupal::database();
-    $logger = \Drupal::logger('my_module');
-    // ...
+  $database = \Drupal::database();
+  $logger = \Drupal::logger('my_module');
+  // ...
 }
 ```
 
@@ -544,21 +544,21 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class NodeEventSubscriber implements EventSubscriberInterface {
 
-    public function __construct(
-        private readonly EntityTypeManagerInterface $entityTypeManager,
-    ) {}
+  public function __construct(
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
-    public static function getSubscribedEvents(): array {
-        return [
-            'entity_insert' => 'onEntityInsert',
-        ];
-    }
+  public static function getSubscribedEvents(): array {
+    return [
+      'entity_insert' => 'onEntityInsert',
+    ];
+  }
 
-    public function onEntityInsert(EntityInterface $entity): void {
-        if ($entity->getEntityTypeId() === 'node') {
-            // Handle node insertion
-        }
+  public function onEntityInsert(EntityInterface $entity): void {
+    if ($entity->getEntityTypeId() === 'node') {
+      // Handle node insertion
     }
+  }
 }
 ```
 
@@ -695,14 +695,14 @@ final class MyHooks {
 ```php
 // ✅ Correct: Implement ContainerFactoryPluginInterface
 class MyPlugin extends PluginBase implements ContainerFactoryPluginInterface {
-    public function __construct(..., Service $service) {
-        parent::__construct(...);
-        $this->service = $service;
-    }
+  public function __construct(..., Service $service) {
+    parent::__construct(...);
+    $this->service = $service;
+  }
 
-    public static function create(ContainerInterface $container, ...) {
-        return new self(..., $container->get('service_id'));
-    }
+  public static function create(ContainerInterface $container, ...) {
+    return new self(..., $container->get('service_id'));
+  }
 }
 ```
 
