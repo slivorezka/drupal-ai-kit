@@ -1,0 +1,36 @@
+name: New skill, subagent or tool
+description: Propose a skill, a subagent, support for another AI tool, or a change to a guide.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What to add or change
+      options:
+        - New skill
+        - New subagent
+        - Support for another AI tool
+        - Change to a topic guide (Drupal, PHP, Twig, JS, Git)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What does the assistant get wrong or not do today? A short example helps.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What the skill, subagent or rule should do. Name, steps, inputs and outputs if you know them.
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I can open a pull request for this (see CONTRIBUTING.md)

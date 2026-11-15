@@ -8,6 +8,8 @@ A ready-to-use set of AI coding assistant configurations for Drupal 10/11 projec
 **Codex** and **Claude Code** the same project rules, coding standards, reusable skills and specialised subagents, so
 every assistant on the team writes Drupal code the same way.
 
+![Install the kit with Composer and let the agent create a Drupal service](docs/media/demo.gif)
+
 ## Why
 
 AI assistants produce much better Drupal code when they know the project's conventions: where code lives, how services
@@ -220,6 +222,11 @@ and add a case to `build()` if the tool needs generated files.
 
 `.ai-kit/tools/copilot/git-commit-instructions.md` repeats the commit format from `.ai-kit/instructions/git.md`
 because commit message generation reads only that file — change both together.
+
+## Contributing
+
+New skills, subagents and support for more AI tools are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md);
+questions and ideas go to [Discussions](https://github.com/slivorezka/drupal-ai-kit/discussions).
 
 ## License
 

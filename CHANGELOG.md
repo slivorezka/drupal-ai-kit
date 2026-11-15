@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- `CONTRIBUTING.md`, issue templates and a vhs script for the demo GIF.
+
+### Changed
+
+- `generate-agents-md` points to `vendor/bin/drupal-ai-kit init` when `AGENTS.md` is missing.
+
 ## [1.0.0] - 2026-11-15
 
 ### Added

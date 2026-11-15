@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the kit does not work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: AI tool
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - GitHub Copilot
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How the kit is installed
+      options:
+        - Composer (vendor/bin/drupal-ai-kit)
+        - Claude Code plugin
+        - Copied by hand
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: "kit 1.0.0, Drupal 11.2, PHP 8.3, Claude Code 2.x"
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output or agent transcript
+      description: Command output, error messages or the relevant part of the agent's answer.
+      render: shell

@@ -22,7 +22,8 @@ parts with what the project actually uses. Detected values are facts; everything
    The script prints JSON. `null`, `false` or an empty list means "not detected".
 
 2. **Read** the root `AGENTS.md`. If it has uncommitted changes (`git status --short AGENTS.md`), ask before editing.
-   If it is missing, stop and tell the user to copy it from the kit.
+   If it is missing, stop and tell the user to install the kit first: `composer require --dev slivorezka/drupal-ai-kit`,
+   then `vendor/bin/drupal-ai-kit init <tool>` (or copy `AGENTS.md` and `.ai-kit/` from the kit by hand).
 
 3. **Rewrite** each generic part that has a detected value, following the table below. Keep the file's structure,
    the Safety, Subagents and Git sections, and every link to `.ai-kit/instructions/`.
