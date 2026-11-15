@@ -1,6 +1,6 @@
 # AI-Powered Drupal Development Instructions
 
-A collection of AI coding assistant configurations for Drupal 10 projects. This repository provides structured instructions, coding standards, and reusable commands for **GitHub Copilot** and **Claude Code** to ensure consistent, high-quality Drupal development.
+A collection of AI coding assistant configurations for Drupal 10 projects. This repository provides structured instructions, coding standards, and reusable commands for **GitHub Copilot**, **Codex** and **Claude Code** to ensure consistent, high-quality Drupal development.
 
 ## What's Inside
 
@@ -61,60 +61,79 @@ Configuration lives in `.github/`:
 
 See the official [GitHub Copilot documentation](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) about custom instructions.
 
-## Claude Code
+## Shared Layer (Codex + Claude Code)
 
-Configuration lives in `.claude/`:
+Everything that does not depend on the tool lives in one place:
+
+```
+AGENTS.md                                          # Project rules (Codex reads it natively, Claude imports it)
+.agents/
+├── instructions/                                  # Topic guides: drupal, php, twig, js, git
+└── skills/                                        # Skills — source of truth (Codex reads it natively)
+    ├── create-drupal-service/SKILL.md
+    ├── create-drupal-plugin/SKILL.md
+    ├── drupal-performance-review/SKILL.md
+    ├── drupal-refactor-to-di/SKILL.md
+    ├── git-commit/SKILL.md
+    └── drupal/                                    # AGENTS.md generator (explicit use only)
+```
+
+## Claude Code
 
 ```
 .claude/
-├── CLAUDE.md                                      # Main project instructions (auto-loaded)
-├── settings.json                                  # Environment and permission settings
-├── instructions/                                  # Topic-specific context files
-│   ├── drupal.md
-│   ├── php.md
-│   ├── js.md
-│   ├── twig.md
-│   └── git.md
-└── commands/                                      # Slash commands
-    ├── create-drupal-service.md
-    ├── create-drupal-plugin.md
-    ├── drupal-performance-review.md
-    ├── drupal-refactor-to-di.md
-    └── git-commit.md
+├── CLAUDE.md                                      # Imports ../AGENTS.md + php/git guides, Claude-only notes
+├── settings.json                                  # Model, language, .env deny rules, subagent log hook
+├── settings.local.json                            # Personal permissions (not committed)
+├── agents/*.md                                    # Subagents
+└── skills/                                        # Copy of .agents/skills (Claude reads only .claude/skills)
 ```
 
-### Slash Command Usage
+Invoke skills as slash commands:
 
 ```
-/user:create-drupal-service UserProfileService in user_profiles module — manages user profile CRUD operations
-/user:create-drupal-plugin MyCustomBlock as Block plugin in my_module
-/user:drupal-performance-review src/Service/DataProcessor.php
-/user:drupal-refactor-to-di src/Controller/MyController.php
-/user:git-commit
+/create-drupal-service UserProfileService in user_profiles module — manages user profile CRUD operations
+/create-drupal-plugin MyCustomBlock as Block plugin in my_module
+/drupal-performance-review src/Service/DataProcessor.php
+/drupal-refactor-to-di src/Controller/MyController.php
+/git-commit
 ```
 
-See the official [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/memory) about memory and custom instructions.
+See the official [Claude Code documentation](https://docs.claude.com/en/docs/claude-code/memory) about memory and custom instructions.
 
-## File Mapping
+## Codex
 
-| GitHub Copilot                                       | Claude Code                                      |
-|------------------------------------------------------|--------------------------------------------------|
-| `.github/copilot-instructions.md`                    | `.claude/CLAUDE.md`                              |
-| `.github/git-commit-instructions.md`                 | `.claude/CLAUDE.md` + `.claude/commands/git-commit.md` |
-| `.github/instructions/drupal.instructions.md`        | `.claude/instructions/drupal.md`                 |
-| `.github/instructions/php.instructions.md`           | `.claude/instructions/php.md`                    |
-| `.github/instructions/js.instructions.md`            | `.claude/instructions/js.md`                     |
-| `.github/instructions/twig.instructions.md`          | `.claude/instructions/twig.md`                   |
-| `.github/instructions/git.instructions.md`           | `.claude/instructions/git.md`                    |
-| `.github/prompts/create-drupal-service.prompt.md`    | `.claude/commands/create-drupal-service.md`      |
-| `.github/prompts/create-drupal-plugin.prompt.md`     | `.claude/commands/create-drupal-plugin.md`       |
-| `.github/prompts/drupal-performance-review.prompt.md`| `.claude/commands/drupal-performance-review.md`  |
-| `.github/prompts/drupal-refactor-to-di.prompt.md`    | `.claude/commands/drupal-refactor-to-di.md`      |
+```
+.codex/
+├── config.toml                                    # Sandbox, approvals, response language (trusted projects only)
+└── agents/*.toml                                  # Custom agents — counterparts of .claude/agents/*.md
+```
+
+Codex loads `AGENTS.md` and `.agents/skills/` on its own. Invoke skills with `$create-drupal-service …`, `$git-commit`, etc.
+Project `.codex/` settings apply only after you trust the project.
+
+## Keeping the Tools in Sync
+
+| What                | Shared (edit here)            | Claude Code                    | Codex                         |
+|---------------------|-------------------------------|--------------------------------|-------------------------------|
+| Project rules       | `AGENTS.md`                   | `@../AGENTS.md` in `CLAUDE.md` | read natively                 |
+| Topic guides        | `.agents/instructions/*.md`   | imported / linked              | linked from `AGENTS.md`       |
+| Skills              | `.agents/skills/*`            | `.claude/skills` copy          | read natively                 |
+| Subagents           | —                             | `.claude/agents/*.md`          | `.codex/agents/*.toml`        |
+| Settings & safety   | —                             | `.claude/settings.json`        | `.codex/config.toml`          |
+
+Subagents and settings are tool-specific formats: when you change one side, update the other.
+
+Skills are edited in `.agents/skills/` and copied to Claude Code (no symlinks):
+
+```bash
+rsync -a --delete .agents/skills/ .claude/skills/
+```
 
 ## How to Use
 
-1. **Copy** the `.github/` and/or `.claude/` directories into your Drupal project root
-2. **Customize** the instructions to match your project's specific needs (module names, services, etc.)
+1. **Copy** `AGENTS.md`, `.agents/` and the tool folders you use (`.claude/`, `.codex/`) into your Drupal project root
+2. **Customize** `AGENTS.md` to match your project's specific needs (module names, services, etc.)
 3. Start coding with your AI assistant — it will automatically follow the configured standards
 
 ## License

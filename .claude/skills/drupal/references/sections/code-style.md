@@ -4,13 +4,14 @@ Adhere to Drupal coding standards (PSR-12 with Drupal extensions). Use Coder and
 
 - **PHP**:
   - Indentation: 2 spaces (no tabs)
-  - Line length: ≤ 80 characters
-  - Naming: CamelCase classes/methods, snake_case variables/functions
+  - Line length: ≤ 120 characters (Drupal Coder standard)
+  - Naming: PascalCase classes, camelCase methods, camelCase class properties and
+    promoted constructor params, snake_case local variables and procedural functions
   - Always use braces; prefer early returns
   - Full PHPDoc blocks with `@param`, `@return`, `@throws`
 
 - **YAML**: 2-space indentation, lowercase keys
-- **Twig**: `{{ }}` for output, `{% %}` for logic; always escape with `|e`
+- **Twig**: `{{ }}` for output, `{% %}` for logic
 
 - **Linting**:
   ```bash

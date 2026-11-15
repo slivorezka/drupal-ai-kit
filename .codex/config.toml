@@ -1,0 +1,10 @@
+# Project-scoped Codex settings. Codex loads this file only when the project is trusted.
+# Personal settings (model, provider, profiles) belong in ~/.codex/config.toml.
+
+# Edit files in the workspace; ask before anything outside the sandbox
+# (ddev/docker, network, writes outside the repo).
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+# Counterpart of `language` in .claude/settings.json.
+developer_instructions = "Always respond in Ukrainian. Keep technical terms and code identifiers in their original form."

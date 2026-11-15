@@ -1,6 +1,7 @@
 ## DDEV Quick Setup
 
 ### Prerequisites
+
 ```bash
 # Install DDEV (macOS)
 brew install ddev/ddev/ddev
@@ -11,13 +12,14 @@ ddev --version
 ```
 
 ### Initialize DDEV Project
+
 ```bash
 # Clone the repository
 git clone <repository-url> my-drupal-project
 cd my-drupal-project
 
 # Initialize DDEV configuration
-ddev config --project-type=drupal --docroot=web --php-version=8.1
+ddev config --project-type={DDEV_PROJECT_TYPE} --docroot=web --php-version={PHP_VERSION}
 
 # Start DDEV environment
 ddev start
@@ -49,6 +51,7 @@ ddev launch
 ```
 
 ### Essential DDEV Commands
+
 ```bash
 # Environment management
 ddev start                # Start development environment
@@ -71,19 +74,20 @@ ddev launch               # Open site in browser
 ```
 
 ### DDEV Configuration
+
 Create `.ddev/config.yaml` for project-specific settings:
 
 ```yaml
 # .ddev/config.yaml
-type: drupal
+type: {DDEV_PROJECT_TYPE}  # drupal10 or drupal11
 docroot: web
-php_version: "8.1"
+php_version: "{PHP_VERSION}"
 webserver_type: nginx-fpm
 router_http_port: "80"
 router_https_port: "443"
 xdebug_enabled: false
-additional_hostnames: []
-additional_fqdns: []
+additional_hostnames: [ ]
+additional_fqdns: [ ]
 
 # Drupal-specific settings
 disable_settings_management: false

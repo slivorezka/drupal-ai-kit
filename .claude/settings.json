@@ -1,12 +1,31 @@
 {
+  "model": "opus",
+  "alwaysThinkingEnabled": false,
+  "language": "ukrainian",
   "env": {
     "CLAUDE_CODE_HIDE_ACCOUNT_INFO": "1"
   },
   "permissions": {
     "deny": [
-      "Bash(**/.env)",
       "Read(**/.env)",
-      "Write(**/.env)"
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Write(**/.env)",
+      "Write(**/.env.*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r --arg t \"$(date '+%F %T')\" '\"\\($t) subagent finished: \\((.tool_input.subagent_type // \"\") | if . == \"\" then \"general/fork\" else . end) — \\(.tool_input.description // \"\")\"' >> \"$CLAUDE_PROJECT_DIR/.claude/agents.log\""
+          }
+        ]
+      }
     ]
   },
   "tools": {
@@ -34,7 +53,5 @@
       "coverage/**",
       "*.log"
     ]
-  },
-  "model": "opus",
-  "alwaysThinkingEnabled": false
+  }
 }

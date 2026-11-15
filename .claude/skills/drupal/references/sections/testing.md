@@ -1,6 +1,7 @@
 ## Testing & Quality Assurance
 
 ### PHPUnit Testing Framework
+
 Aim for ≥ 80% code coverage. Drupal provides multiple test types:
 
 ```bash
@@ -24,6 +25,7 @@ SIMPLETEST_DB=sqlite://localhost/tmp.sqlite vendor/bin/phpunit
 ### Test Types and Examples
 
 #### Unit Tests (fastest)
+
 - **Purpose**: Test individual classes and methods in isolation
 - **Base class**: Extend `UnitTestCase` from `Drupal\Tests\UnitTestCase`
 - **Speed**: Fastest test type, no Drupal bootstrap required
@@ -34,6 +36,7 @@ SIMPLETEST_DB=sqlite://localhost/tmp.sqlite vendor/bin/phpunit
 - **Best practices**: Keep tests small, focused, and deterministic
 
 #### Kernel Tests (with database)
+
 - **Purpose**: Test Drupal interactions with minimal Drupal environment
 - **Base class**: Extend `KernelTestBase` from `Drupal\KernelTests\KernelTestBase`
 - **Environment**: Partial Drupal bootstrap with in-memory database
@@ -44,6 +47,7 @@ SIMPLETEST_DB=sqlite://localhost/tmp.sqlite vendor/bin/phpunit
 - **Setup**: Install modules and configuration in `setUp()` method
 
 #### Functional Tests (with browser)
+
 - **Purpose**: Test complete user interactions through browser simulation
 - **Base class**: Extend `BrowserTestBase` from `Drupal\Tests\BrowserTestBase`
 - **Environment**: Full Drupal bootstrap with real browser
@@ -55,6 +59,7 @@ SIMPLETEST_DB=sqlite://localhost/tmp.sqlite vendor/bin/phpunit
 - **Assertions**: Use `$this->assertSession()` for web assertions
 
 ### Code Quality Tools
+
 ```bash
 # Static analysis (add to composer require)
 vendor/bin/phpstan analyse                      # PHPStan analysis
@@ -69,6 +74,7 @@ vendor/bin/phpunit --group accessibility       # Accessibility tests
 ```
 
 ### JavaScript Testing
+
 ```bash
 # Install JavaScript dependencies
 npm install
@@ -79,9 +85,10 @@ npm run test:a11y                             # Accessibility tests
 ```
 
 ### Before Submitting Code
+
 ```bash
 # Quality checklist
-vendor/bin/phpcs --standard=Drupal .          # Code style
+vendor/bin/phpcs --standard=Drupal .           # Code style
 vendor/bin/phpunit                             # Run tests
 drush cr                                       # Clear caches
 drush updatedb                                 # Run updates

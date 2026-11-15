@@ -31,7 +31,7 @@ ddev exec drush sql:query "SELECT * FROM watchdog WHERE type = 'php' ORDER BY wi
 ddev exec drush config:get system.performance
 
 # Enable performance modules
-ddev exec drush pm:enable memcache redis -y
+ddev exec drush pm:enable redis -y
 ```
 
 ### Module/Theme Development Issues in DDEV

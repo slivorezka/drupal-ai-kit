@@ -1,12 +1,14 @@
 ## DDEV Development Workflow
 
 ### Project Structure
-- **Modules** → `web/modules/custom/<module_name>`
+
+- **Modules** → `web/modules/custom/<my_module>`
 - **Themes** → `web/themes/custom/<theme_name>`
 - **Configuration** → Export with `ddev exec drush config:export`
 - **Profiles** → `web/profiles/custom/<profile_name>`
 
 ### Essential Development Commands
+
 ```bash
 # Cache management (run inside DDEV)
 ddev exec drush cr                    # Clear all caches
@@ -22,6 +24,7 @@ ddev exec drush updatedb              # Run database updates
 ```
 
 ### Version Control Workflow
+
 - **Commit messages**: Format `[#123456] Brief descriptive title`
 - **Branch from**: `develop` branch for features
 - **Atomic commits**: One logical change per commit

@@ -37,24 +37,39 @@ templates/
 
 ### Template Registration
 
+`hook_theme()` can be implemented as an OOP hook on Drupal 11.1+ (shown below as a `#[Hook('theme')]` method). On
+Drupal 10.x implement it as a procedural `my_module_theme()` function in `my_module.module`:
+
 ```php
 <?php
 
 declare(strict_types=1);
 
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+
 /**
- * Implements hook_theme().
+ * Theme hook implementations for my_module.
  */
-function my_module_theme(): array {
+final class ThemeHooks {
+
+  /**
+   * Implements hook_theme().
+   */
+  #[Hook('theme')]
+  public function theme(): array {
     return [
-        'my_template' => [
-            'variables' => [
-                'title' => NULL,
-                'items' => [],
-                'description' => NULL,
-            ],
+      'my_template' => [
+        'variables' => [
+          'title' => NULL,
+          'items' => [],
+          'description' => NULL,
         ],
+      ],
     ];
+  }
+
 }
 ```
 
@@ -66,37 +81,41 @@ function my_module_theme(): array {
 
 ```twig
 {#
-  /**
-   * @file
-   * Template for displaying a custom component.
-   *
-   * Available variables:
-   * - title (string): The component title.
-   * - items (array): List of items to display.
-   * - description (string): Component description.
-   *
-   * @ingroup themeable
-   */
-#}
+/**
+
+* @file
+* Template for displaying a custom component.
+*
+* Available variables:
+*
+  - title (string): The component title.
+*
+  - items (array): List of items to display.
+*
+  - description (string): Component description.
+*
+* @ingroup themeable
+  */
+  #}
 
 <div class="my-component">
   {% if title %}
     <h2 class="my-component__title">{{ title }}</h2>
   {% endif %}
 
-  {% if description %}
-    <p class="my-component__description">{{ description }}</p>
-  {% endif %}
+{% if description %}
+<p class="my-component__description">{{ description }}</p>
+{% endif %}
 
-  {% if items %}
-    <ul class="my-component__list">
-      {% for item in items %}
-        <li class="my-component__item">{{ item }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="my-component__empty">{{ 'No items found'|t }}</p>
-  {% endif %}
+{% if items %}
+<ul class="my-component__list">
+{% for item in items %}
+<li class="my-component__item">{{ item }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="my-component__empty">{{ 'No items found'|t }}</p>
+{% endif %}
 </div>
 ```
 
@@ -106,15 +125,27 @@ Always include a documentation block:
 
 ```twig
 {#
-  /**
-   * @file
-   * Brief description of template.
-   *
-   * Available variables:
-   * - variable_name (type): Description.
-   *
-   * @ingroup themeable
-   */
+/**
+ * @file
+ * Brief description of template.
+ *
+ * Available variables:
+ * - variable_name (type): Description.
+ *
+ * @ingroup themeable
+ */
+#}
+```
+
+### Comments
+
+Multi-line comments: `{#` and `#}` on their own lines at the code's indent,
+the text indented two more spaces (a `/** … */` file header stays as above):
+
+```twig
+{#
+  Social network links from the site settings.
+  Icons come from the theme's SVG sprite.
 #}
 ```
 
@@ -125,9 +156,9 @@ Always include a documentation block:
 ### Auto-escaping (Default)
 
 ```twig
-{{ title }}                  {# Safe — HTML special characters escaped #}
-{{ user.name }}              {# Safe — nested properties escaped #}
-{{ content }}                {# Safe — Drupal render arrays #}
+{{ title }} {# Safe — HTML special characters escaped #}
+{{ user.name }} {# Safe — nested properties escaped #}
+{{ content }} {# Safe — Drupal render arrays #}
 ```
 
 ### When NOT to Escape
@@ -135,15 +166,20 @@ Always include a documentation block:
 Use `|raw` **only** for trusted content already escaped in PHP:
 
 ```twig
-{{ safe_html|raw }}          {# Content pre-escaped in PHP #}
-{{ content.field_body }}     {# Entity render arrays are safe #}
+{{ safe_html|raw }} {# Content pre-escaped in PHP #}
+{{ content.field_body }} {# Entity render arrays are safe #}
 ```
 
 ### Common Filters
 
+The `escape('url')` strategy encodes a single URL *component* (e.g. a query-string value), not a whole URL — applying
+it to a complete link corrupts it. Generate links with the `path()` / `url()` functions or the `link()` function
+instead:
+
 ```twig
 {{ html_content|striptags }}
-<a href="{{ url|escape('url') }}">Link</a>
+<a href="{{ path('route.name', {'id': item.id}) }}">Link</a>
+<a href="?q={{ query_value|escape('url') }}">Filtered</a>   {# escape ('url') on a component only #}
 <div data-title="{{ title|escape('html_attr') }}">
 ```
 
@@ -152,22 +188,22 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 ## 5. Conditionals
 
 ```twig
-{% if isActive %}
-    <span class="badge badge--active">Active</span>
+{% if is_active %}
+<span class="badge badge--active">Active</span>
 {% endif %}
 
 {% if user.isAuthenticated %}
-    <p>Welcome, {{ user.name }}</p>
+  <p>Welcome, {{ user.name }}</p>
 {% else %}
-    <p><a href="/login">Login</a></p>
+  <p><a href="/login">Login</a></p>
 {% endif %}
 
 {% if status == 'published' %}
-    <span>Published</span>
+<span>Published</span>
 {% elseif status == 'draft' %}
-    <span>Draft</span>
+<span>Draft</span>
 {% else %}
-    <span>Archived</span>
+<span>Archived</span>
 {% endif %}
 
 {# Null coalescing #}
@@ -180,18 +216,18 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 
 ```twig
 {% for item in items %}
-    <div>{{ item }}</div>
+  <div>{{ item }}</div>
 {% else %}
-    <p>No items found</p>
+  <p>{{ 'No items found'|t }}</p>
 {% endfor %}
 
 {# Loop variables #}
 {% for item in items %}
-    {% if loop.first %}<ul>{% endif %}
-    <li class="{% if loop.even %}even{% else %}odd{% endif %}">
-        {{ loop.index }} of {{ loop.length }}: {{ item }}
-    </li>
-    {% if loop.last %}</ul>{% endif %}
+{% if loop.first %}<ul>{% endif %}
+  <li class="{% if loop.even %}even{% else %}odd{% endif %}">
+    {{ loop.index }} of {{ loop.length }}: {{ item }}
+  </li>
+  {% if loop.last %}</ul>{% endif %}
 {% endfor %}
 ```
 
@@ -203,12 +239,12 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 
 ```twig
 {{ 'Hello World'|t }}
-{{ 'Hello @name'|t({'@name': user.name}) }}
+{{ 'Hello @name'|t ({'@name': user.name}) }}
 
 {% trans %}
-    You have 1 item.
+You have 1 item.
 {% plural count %}
-    You have @count items.
+You have @count items.
 {% endtrans %}
 ```
 
@@ -216,14 +252,14 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 
 ```twig
 <div{{ attributes }}>
-<div{{ attributes.addClass('my-class') }}>
-<div{{ attributes.setAttribute('data-id', item.id) }}>
+<div{{ attributes.addClass ('my-class') }}>
+<div{{ attributes.setAttribute ('data-id', item.id) }}>
 ```
 
 ### Link Generation
 
 ```twig
-{{ link(title, url) }}
+{{ link (title, url) }}
 <a href="{{ path('route.name', {'id': item.id}) }}">Link</a>
 <a href="{{ url('route.name', {'id': item.id}) }}">Link</a>
 ```
@@ -231,7 +267,7 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 ### Attach Libraries
 
 ```twig
-{{ attach_library('my_module/my_library') }}
+{{ attach_library ('my_module/my_library') }}
 ```
 
 ---
@@ -244,12 +280,12 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}My Site{% endblock %}</title>
+  <title>{% block title %}My Site{% endblock %}</title>
 </head>
 <body>
-    <header>{% block header %}{% endblock %}</header>
-    <main>{% block content %}{% endblock %}</main>
-    <footer>{% block footer %}{% endblock %}</footer>
+  <header>{% block header %}{% endblock %}</header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer>{% block footer %}{% endblock %}</footer>
 </body>
 </html>
 ```
@@ -262,7 +298,7 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 {% block title %}Page Title{% endblock %}
 
 {% block content %}
-    <h1>{{ pageTitle }}</h1>
+  <h1>{{ page_title }}</h1>
 {% endblock %}
 ```
 
@@ -272,14 +308,14 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 
 ```twig
 {% include 'components/card.html.twig' with {
-    'title': item.title,
-    'image': item.image,
+'title': item.title,
+'image': item.image,
 } only %}
 
 {# Dynamic include with fallback #}
 {% include [
-    'components/' ~ componentType ~ '.html.twig',
-    'components/default.html.twig',
+'components/' ~ component_type ~ '.html.twig',
+'components/default.html.twig',
 ] %}
 ```
 
@@ -288,18 +324,18 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 ## 10. BEM CSS Naming
 
 ```twig
-<div class="card">                              {# Block #}
-    <div class="card__header">                   {# Element #}
-        <h2 class="card__title">Title</h2>
-    </div>
-    <div class="card__footer">
-        <button class="card__button card__button--primary">Action</button>
-    </div>
+<div class="card">                            {# Block #}
+  <div class="card__header">                  {# Element #}
+    <h2 class="card__title">Title</h2>
+  </div>
+  <div class="card__footer">
+    <button class="card__button card__button--primary">Action</button>
+  </div>
 </div>
 
 {# Dynamic classes #}
 {% set classes = ['card'] %}
-{% if isFeatured %}{% set classes = classes|merge(['card--featured']) %}{% endif %}
+{% if is_featured %}{% set classes = classes|merge (['card--featured']) %}{% endif %}
 <div class="{{ classes|join(' ') }}">
 ```
 
@@ -310,16 +346,32 @@ Use `|raw` **only** for trusted content already escaped in PHP:
 Always prepare data in PHP, not in templates:
 
 ```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+
 /**
- * Implements hook_preprocess_HOOK().
+ * Preprocess hook implementations for my_module.
  */
-function my_module_preprocess_my_component(array &$variables): void {
+final class PreprocessHooks {
+
+  /**
+   * Implements hook_preprocess_HOOK() for my_component.
+   */
+  #[Hook('preprocess_my_component')]
+  public function preprocessMyComponent(array &$variables): void {
     $node = $variables['node'] ?? NULL;
     if ($node) {
-        $variables['title'] = $node->getTitle();
-        $variables['is_published'] = $node->isPublished();
-        $variables['#attached']['library'][] = 'my_module/my_library';
+      $variables['title'] = $node->getTitle();
+      $variables['is_published'] = $node->isPublished();
+      $variables['#attached']['library'][] = 'my_module/my_library';
     }
+  }
+
 }
 ```
 
@@ -332,11 +384,11 @@ function my_module_preprocess_my_component(array &$variables): void {
 {{ content.field_body }}
 
 {% if content.field_body %}
-    <div class="body">{{ content.field_body }}</div>
+  <div class="body">{{ content.field_body }}</div>
 {% endif %}
 
 <article{{ attributes }}>
-    {{ content }}
+{{ content }}
 </article>
 ```
 
@@ -354,7 +406,7 @@ function my_module_preprocess_my_component(array &$variables): void {
 {{ html_content|raw }}
 
 {# ❌ NEVER: Dynamic HTML generation #}
-{{ '<span>' ~ title ~ '</span>'|raw }}
+{{ ('<span>' ~ title ~ '</span>')|raw }}
 ```
 
 ---
@@ -364,19 +416,19 @@ function my_module_preprocess_my_component(array &$variables): void {
 ```twig
 {# Don't process if not needed #}
 {% if should_show_sidebar %}
-    {% include 'sidebar.html.twig' %}
+{% include 'sidebar.html.twig' %}
 {% endif %}
 
 {# ❌ Complex logic in template #}
 {% for item in items %}
-    {% if item.status == 'active' and item.user.role == 'admin' %}
-        ...
-    {% endif %}
+{% if item.status == 'active' and item.user.role == 'admin' %}
+...
+{% endif %}
 {% endfor %}
 
 {# ✅ Process in PHP preprocess #}
-{% for item in filteredItems %}
-    <li>{{ item.title }}</li>
+{% for item in filtered_items %}
+  <li>{{ item.title }}</li>
 {% endfor %}
 ```
 
@@ -385,8 +437,8 @@ function my_module_preprocess_my_component(array &$variables): void {
 ## 15. Debugging
 
 ```twig
-{{ dump() }}
-{{ dump(myVariable) }}
+{{ dump () }}
+{{ dump (my_variable) }}
 
 {# List available variables #}
 {% for key in _context|keys %}{{ key }}{% if not loop.last %}, {% endif %}{% endfor %}
@@ -400,14 +452,14 @@ function my_module_preprocess_my_component(array &$variables): void {
 
 ```twig
 {# ❌ Error if undefined #}
-{{ myVar }}
+{{ my_var }}
 
 {# ✅ Safe with default #}
-{{ myVar|default('No value') }}
+{{ my_var|default ('No value') }}
 
 {# ✅ Check existence #}
-{% if myVar is defined %}
-    {{ myVar }}
+{% if my_var is defined %}
+{{ my_var }}
 {% endif %}
 ```
 
@@ -419,7 +471,7 @@ function my_module_preprocess_my_component(array &$variables): void {
 {# loop.index not available here #}
 
 {# ✅ Use set for values needed outside loop #}
-{% set itemCount = items|length %}
+{% set item_count = items|length %}
 ```
 
 ---

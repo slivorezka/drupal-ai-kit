@@ -30,6 +30,7 @@ This guide defines the ordering and composition of sections in the final AGENTS.
 In `references/sections/project-overview.md`, replace:
 - `{DRUPAL_VERSION}` with detected Drupal version (e.g., "10.x+" or "11.x+")
 - `{ENVIRONMENT_NAME}` with detected environment (DDEV, Lando, Docker Compose, or Vanilla)
+- `{DDEV_PROJECT_TYPE}` with `drupal10` or `drupal11` (from the detected Drupal major version)
 - `{PHP_VERSION}` with detected PHP version requirement
 - `{WEBSERVER}` with appropriate webserver (Nginx, Apache, or both)
 - `{ENVIRONMENT_TOOLS}` with environment-specific tools (e.g., ", DDEV CLI" for DDEV)
@@ -50,17 +51,18 @@ These placeholders ensure that all Docker Compose commands use the correct servi
 ## Version-Specific Adjustments
 
 For Drupal 11.x:
-- Note PHP 8.2+ requirement
+- State the PHP version detected from `.ddev/config.yaml` / `composer.json`
+- On 11.1+ prefer OOP hooks (`#[Hook]`) and plugin attributes; mention procedural patterns only as legacy
 - Mention deprecated hooks and APIs
-- Update patterns to reflect Drupal 11 changes
 
 For Drupal 10.x:
-- Standard patterns apply
-- PHP 8.1+ requirement
+- Hooks stay procedural in `.module` (no `#[Hook]`); plugin attributes are fine on 10.2+
+- State the PHP version detected from `.ddev/config.yaml` / `composer.json`
 
 ## Environment-Specific Content
 
-Each environment directory (`ddev/`, `lando/`, `docker-compose/`, `vanilla/`) contains:
+Each environment directory (`ddev/`, `lando/`, `docker-compose/`, `vanilla/`) contains the files below. Only `ddev/` is
+bundled today:
 - `overview.md` - Environment-specific overview (used in Project Overview section)
 - `setup.md` - Setup instructions
 - `commands.md` - Development workflow commands

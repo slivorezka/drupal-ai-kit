@@ -1,3 +1,9 @@
+---
+name: git-commit
+description: Generate a commit message in the project format (#329: Description.)
+argument-hint: [ context ]
+---
+
 Generate a properly formatted Git commit message for the current changes based on the active branch name.
 
 Context: $ARGUMENTS

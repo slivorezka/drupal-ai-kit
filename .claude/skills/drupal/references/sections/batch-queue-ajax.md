@@ -1,6 +1,7 @@
 ## Advanced Development Patterns
 
 ### Batch API for Long Operations
+
 - **Purpose**: Process large datasets without PHP timeout issues
 - **Use cases**: Data migration, bulk updates, file processing, API calls
 - **Batch structure**: Create associative array with title, operations, and finished callback
@@ -11,6 +12,7 @@
 - **Memory management**: Processes data in chunks to prevent memory exhaustion
 
 ### Queue API for Background Processing
+
 - **Purpose**: Process tasks in the background without blocking user interaction
 - **Queue creation**: Use `\Drupal::queue('queue_name')` to get queue instance
 - **Item addition**: Use `createItem()` to add tasks to the queue
@@ -22,6 +24,7 @@
 - **Performance**: Process multiple items per cron run for efficiency
 
 ### AJAX Forms
+
 - **Trigger elements**: Add `#ajax` property to form elements (select, checkbox, button)
 - **Callback method**: Reference callback method using `::methodName` syntax
 - **Wrapper element**: Specify target element ID for AJAX response replacement

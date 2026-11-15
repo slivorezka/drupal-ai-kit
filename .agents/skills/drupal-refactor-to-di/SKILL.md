@@ -1,4 +1,12 @@
-You are a Drupal 10 refactoring expert. Refactor the provided code to use proper dependency injection, replacing all static service calls (`\Drupal::service()`, `\Drupal::database()`, etc.) with modern DI patterns following PHP 8.3 and Drupal 10 best practices.
+---
+name: drupal-refactor-to-di
+description: Refactor Drupal code from static Drupal:: calls to dependency injection
+argument-hint: <file path or code>
+---
+
+You are a Drupal 10/11 refactoring expert. Refactor the provided code to use proper dependency injection, replacing all
+static service calls (`\Drupal::service()`, `\Drupal::database()`, etc.) with modern DI patterns following PHP 8.3+ and
+Drupal 10/11 best practices.
 
 Analyze and refactor the following code or file: $ARGUMENTS
 
@@ -6,8 +14,9 @@ If a file path is provided, read the file and refactor it. If code is provided d
 
 ## Refactoring Goals
 
-1. **Remove all static calls**: Eliminate `\Drupal::service()`, `\Drupal::database()`, `\Drupal::config()`, `\Drupal::entityTypeManager()`, `\Drupal::currentUser()`, `\Drupal::logger()`, etc.
-2. **Add constructor DI**: Inject all dependencies via constructor with `private readonly` typed properties
+1. **Remove all static calls**: Eliminate `\Drupal::service()`, `\Drupal::database()`, `\Drupal::config()`,
+   `\Drupal::entityTypeManager()`, `\Drupal::currentUser()`, `\Drupal::logger()`, etc.
+2. **Add constructor DI**: Inject all dependencies via the constructor with `private readonly` typed properties
 3. **Add `create()` method**: For classes instantiated by the container (controllers, forms, plugins)
 4. **Add type hints**: Strict typing on all parameters and return types
 5. **Add PHPDoc**: Comprehensive documentation
@@ -33,72 +42,113 @@ If a file path is provided, read the file and refactor it. If code is provided d
 ## Refactoring Patterns
 
 ### Pattern: Controller
+
 - Extend `ControllerBase`
 - Add constructor with DI
 - Add `create()` static method
 - Replace all `\Drupal::` calls with `$this->property`
 
 ### Pattern: Form
+
 - Extend `FormBase` or `ConfigFormBase`
 - Add constructor with DI
 - Add `create()` static method
 
 ### Pattern: Plugin (Block, etc.)
+
 - Implement `ContainerFactoryPluginInterface`
 - Constructor: `(array $configuration, string $plugin_id, mixed $plugin_definition, ...services)`
 - Call `parent::__construct($configuration, $plugin_id, $plugin_definition)` first
 - Add `create()` with container + plugin params
 
 ### Pattern: Service
+
 - Pure constructor DI (no `create()` method needed)
 - Register in `*.services.yml`
 
-### Pattern: Hook → Service Delegation
-If converting hook functions with static calls:
+### Pattern: Procedural Hook → OOP Hook Class
+
+Procedural hooks in `.module` files cannot use constructor injection. Move them to a class in `src/Hook/` with the
+`#[Hook]` attribute (Drupal 11.1+ only — on Drupal 10.x keep the procedural hook as a thin wrapper that only fetches a service with
+`\Drupal::service()` and delegates to it; static calls are tolerated in `.module` files, never in classes). Classes in `src/Hook/` are registered as autowired services automatically, so
+dependencies are injected via the constructor with no `create()` method and no `services.yml` entry.
+
 ```php
-// Hook file delegates to service.
-function my_module_node_insert(EntityInterface $entity): void {
-    \Drupal::service('my_module.node_service')->onNodeInsert($entity);
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\my_module\NodeService;
+use Drupal\node\NodeInterface;
+
+/**
+ * Node hook implementations for my_module.
+ */
+final class NodeHooks {
+
+  /**
+   * Constructor.
+   */
+  public function __construct(
+    private readonly NodeService $nodeService,
+  ) {}
+
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for nodes.
+   */
+  #[Hook('node_insert')]
+  public function nodeInsert(NodeInterface $node): void {
+    $this->nodeService->onNodeInsert($node);
+  }
+
 }
 ```
+
+Delete the procedural function afterward. Use `#[Hook]` classes in the module's `src/Hook/` directory.
 
 ## Output Requirements
 
 Generate all of the following:
 
 1. **Refactored PHP File** — Complete file with:
-   - `declare(strict_types=1);`
-   - Proper namespace and imports
-   - Constructor with `private readonly` dependencies
-   - `create()` method (if applicable)
-   - All static calls replaced with `$this->property`
-   - Comprehensive PHPDoc blocks
+
+- `declare(strict_types=1);`
+- A proper namespace and imports
+- Constructor with `private readonly` dependencies
+- `create()` method (if applicable)
+- All static calls are replaced with `$this->property`
+- Comprehensive PHPDoc blocks
 
 2. **Services.yml Entry** — If a new service is created:
+
 ```yaml
 services:
-  {module_name}.{service_name}:
-    class: Drupal\{module_name}\Service\{ServiceName}
-    arguments:
-      - '@dependency1'
-      - '@dependency2'
+  { my_module }.{service_name}:
+                 class: Drupal\{my_module}\Service\{ServiceName}
+                 arguments:
+                   - '@dependency1'
+                   - '@dependency2'
 ```
 
 3. **Migration Notes** — Steps to integrate:
-   - Files changed
-   - Services added
-   - Tests to update
-   - Caches to clear
+
+- Files changed
+- Services added
+- Tests to update
+- Caches to clear
 
 4. **Before/After Summary** — What changed and why
 
 ## Validation Checklist
 
-- [ ] All `\Drupal::` static calls removed from classes
-- [ ] All dependencies injected via constructor
+- [ ] All `\Drupal::` static calls are removed from classes
+- [ ] All dependencies are injected via constructor
 - [ ] All properties are `private readonly`
-- [ ] All parameters and returns have type hints
-- [ ] PHPDoc blocks present and accurate
+- [ ] All parameters and return types have type hints
+- [ ] PHPDoc blocks are present and accurate
 - [ ] `create()` method implemented (for plugins/forms/controllers)
 - [ ] Services registered in services.yml
 - [ ] No circular dependencies introduced
