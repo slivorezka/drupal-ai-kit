@@ -48,28 +48,39 @@ templates/
 
 ### Module Template Registration
 
-Register templates in `my_module.module`:
+Register templates with an OOP `hook_theme()` in `src/Hook/` (the template defaults to `templates/my-template.html.twig`
+in the module, so `template` and `path` are not needed):
 
 ```php
 <?php
 
 declare(strict_types=1);
 
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+
 /**
- * Implements hook_theme().
+ * Theme hook implementations for my_module.
  */
-function my_module_theme(): array {
-  return [
-    'my_template' => [
-     'template' => 'my-template',
-     'path' => drupal_get_path('module', 'my_module') . '/templates',
-           'variables' => [
-        'title' => NULL,
-        'items' => [],
-        'description' => NULL,
+final class ThemeHooks {
+
+  /**
+   * Implements hook_theme().
+   */
+  #[Hook('theme')]
+  public function theme(): array {
+    return [
+      'my_template' => [
+        'variables' => [
+          'title' => NULL,
+          'items' => [],
+          'description' => NULL,
+        ],
       ],
-    ],
-  ];
+    ];
+  }
+
 }
 ```
 
@@ -753,19 +764,27 @@ Use BEM for CSS class naming in templates:
 
 ### Drupal Render Arrays & Classes
 
-```twig
-{# In preprocess, add to classes array #}
-function my_module_preprocess_node(array &$variables): void {
+In preprocess (`src/Hook/ThemeHooks.php`), add to the classes array:
+
+```php
+  /**
+   * Implements hook_preprocess_HOOK() for nodes.
+   */
+  #[Hook('preprocess_node')]
+  public function preprocessNode(array &$variables): void {
     $node = $variables['node'];
 
     $variables['attributes']->addClass('node--' . $node->getType());
 
     if ($node->isPublished()) {
-        $variables['attributes']->addClass('node--published');
+      $variables['attributes']->addClass('node--published');
     }
-}
+  }
+```
 
-{# In template #}
+In the template:
+
+```twig
 <article{{ attributes }}>
     {{ content }}
 </article>
@@ -810,7 +829,7 @@ function my_module_preprocess_node(array &$variables): void {
    * - isCurrentUser (bool): Is this the logged-in user.
    * - classes (array): Additional CSS classes.
    *
-   * @see my_module_preprocess_user_card()
+   * @see \Drupal\my_module\Hook\ThemeHooks::preprocessUserCard()
    * @ingroup themeable
    */
 #}
@@ -878,87 +897,115 @@ function my_module_preprocess_node(array &$variables): void {
 
 ## 15. Preprocessing & Data Preparation
 
-### Preprocess Function Pattern
+### Preprocess Hook Pattern
 
-Always prepare data in PHP, not in templates:
+Always prepare data in PHP, not in templates. Preprocess hooks are OOP `#[Hook('preprocess_HOOK')]` methods on a class
+in `src/Hook/`; services come in through the constructor (classes in `src/Hook/` are autowired):
 
 ```php
 <?php
 
 declare(strict_types=1);
 
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+
 /**
- * Implements hook_preprocess_HOOK().
+ * Preprocess hook implementations for my_module.
  */
-function my_module_preprocess_my_component(array &$variables): void {
+final class PreprocessHooks {
+
+  /**
+   * Constructs a PreprocessHooks object.
+   *
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
+   *   The date formatter.
+   */
+  public function __construct(
+    private readonly DateFormatterInterface $dateFormatter,
+  ) {}
+
+  /**
+   * Implements hook_preprocess_HOOK() for my_component.
+   */
+  #[Hook('preprocess_my_component')]
+  public function preprocessMyComponent(array &$variables): void {
     $node = $variables['node'] ?? NULL;
 
     if ($node) {
-        // Process data
-        $variables['title'] = $node->getTitle();
-        $variables['description'] = $node->get('field_description')->value ?? '';
+      // Process data.
+      $variables['title'] = $node->getTitle();
+      $variables['description'] = $node->get('field_description')->value ?? '';
 
-        // Format dates
-        $variables['created_date'] = date('Y-m-d', $node->getCreatedTime());
+      // Format dates.
+      $variables['created_date'] = $this->dateFormatter->format($node->getCreatedTime(), 'custom', 'Y-m-d');
 
-        // Load related entities
-        $variables['author'] = $node->getOwner();
+      // Load related entities.
+      $variables['author'] = $node->getOwner();
 
-        // Add computed values
-        $variables['is_published'] = $node->isPublished();
+      // Add computed values.
+      $variables['is_published'] = $node->isPublished();
 
-        // Build classes
-        $variables['classes'][] = 'component--' . $node->getType();
+      // Build classes.
+      $variables['classes'][] = 'component--' . $node->getType();
 
-        if ($node->get('field_featured')->value) {
-            $variables['classes'][] = 'component--featured';
-        }
+      if ($node->get('field_featured')->value) {
+        $variables['classes'][] = 'component--featured';
+      }
     }
+  }
+
 }
 ```
 
 ### Complex Data Processing
 
+Add further preprocess methods to the same class (or a separate class per concern):
+
 ```php
-/**
- * Implements hook_preprocess_HOOK().
- */
-function my_module_preprocess_card_grid(array &$variables): void {
+  /**
+   * Implements hook_preprocess_HOOK() for card_grid.
+   */
+  #[Hook('preprocess_card_grid')]
+  public function preprocessCardGrid(array &$variables): void {
     $nodes = $variables['items'] ?? [];
     $processed_items = [];
 
     foreach ($nodes as $node) {
-        // Transform each item
-        $processed_items[] = [
-            'title' => $node->getTitle(),
-            'image' => $node->get('field_image')->uri ?? NULL,
-            'description' => substr($node->get('field_body')->value, 0, 100),
-            'url' => $node->toUrl()->toString(),
-            'date' => $node->getCreatedTime(),
-        ];
+      // Transform each item.
+      $processed_items[] = [
+        'title' => $node->getTitle(),
+        'image' => $node->get('field_image')->uri ?? NULL,
+        'description' => mb_substr($node->get('field_body')->value ?? '', 0, 100),
+        'url' => $node->toUrl()->toString(),
+        'date' => $node->getCreatedTime(),
+      ];
     }
 
     $variables['items'] = $processed_items;
-}
+  }
 ```
 
 ### Caching in Preprocess
 
 ```php
-/**
- * Implements hook_preprocess_HOOK().
- */
-function my_module_preprocess_my_template(array &$variables): void {
-    // Add cache tags
+  /**
+   * Implements hook_preprocess_HOOK() for my_template.
+   */
+  #[Hook('preprocess_my_template')]
+  public function preprocessMyTemplate(array &$variables): void {
+    // Add cache tags.
     $variables['#cache']['tags'][] = 'node_list';
     $variables['#cache']['tags'][] = 'taxonomy_term_list';
 
-    // Set cache max age (1 hour)
+    // Set cache max age (1 hour).
     $variables['#cache']['max-age'] = 3600;
 
-    // Add cache context (varies by user)
+    // Add cache context (varies by user).
     $variables['#cache']['contexts'][] = 'user';
-}
+  }
 ```
 
 ---
@@ -995,16 +1042,17 @@ function my_module_preprocess_my_template(array &$variables): void {
 ### Filtering Rendered Content
 
 ```php
-/**
- * Preprocess to hide/show fields.
- */
-function my_module_preprocess_node(array &$variables): void {
-    // Hide certain fields by not including in content
+  /**
+   * Implements hook_preprocess_HOOK() for nodes: hides/shows fields.
+   */
+  #[Hook('preprocess_node')]
+  public function preprocessNode(array &$variables): void {
+    // Hide certain fields by not including them in content.
     unset($variables['content']['field_admin_only']);
 
-    // Or set display: none via attributes
+    // Or set display: none via attributes.
     $variables['content']['field_secondary']['#attributes']['class'][] = 'hidden';
-}
+  }
 ```
 
 ---
@@ -1142,27 +1190,63 @@ function my_module_preprocess_node(array &$variables): void {
 
 ### Cache Rendering
 
+Inject the cache backend into the hook class instead of calling `\Drupal::cache()`:
+
 ```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\my_module\Service\ExpensiveDataBuilder;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
 /**
- * Preprocess with caching.
+ * Preprocess hooks that cache expensive data.
  */
-function my_module_preprocess_expensive_template(array &$variables): void {
+final class ExpensiveTemplateHooks {
+
+  /**
+   * Constructs an ExpensiveTemplateHooks object.
+   *
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   The default cache backend.
+   * @param \Drupal\my_module\Service\ExpensiveDataBuilder $dataBuilder
+   *   The service that builds the expensive data.
+   */
+  public function __construct(
+    #[Autowire(service: 'cache.default')]
+    private readonly CacheBackendInterface $cache,
+    private readonly ExpensiveDataBuilder $dataBuilder,
+  ) {}
+
+  /**
+   * Implements hook_preprocess_HOOK() for expensive_template.
+   */
+  #[Hook('preprocess_expensive_template')]
+  public function preprocessExpensiveTemplate(array &$variables): void {
     $cache_key = 'my_module:template:expensive_data';
 
-    if ($cache = \Drupal::cache()->get($cache_key)) {
-        $variables['data'] = $cache->data;
-    } else {
-        // Expensive operation
-        $variables['data'] = expensiveOperation();
-
-        // Cache for 1 hour with tags
-        \Drupal::cache()->set(
-            $cache_key,
-            $variables['data'],
-            CacheBackendInterface::CACHE_PERMANENT,
-            ['my_module_tag']
-        );
+    if ($cache = $this->cache->get($cache_key)) {
+      $variables['data'] = $cache->data;
+      return;
     }
+
+    // Expensive operation.
+    $variables['data'] = $this->dataBuilder->build();
+
+    // Cache permanently; invalidated through the tag.
+    $this->cache->set(
+      $cache_key,
+      $variables['data'],
+      CacheBackendInterface::CACHE_PERMANENT,
+      ['my_module_tag'],
+    );
+  }
+
 }
 ```
 

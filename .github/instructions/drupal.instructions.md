@@ -135,36 +135,54 @@ my_library:
 
 ### Hook Implementation
 
-Hooks are entry points for modules to interact with Drupal. Implement hooks in a dedicated file or class.
+Hooks are entry points for modules to interact with Drupal. Implement them as **OOP hooks** (Drupal 11.1+): methods on
+a class in `src/Hook/` (namespace `Drupal\my_module\Hook`), annotated with the `#[Hook(...)]` attribute. Classes in
+`src/Hook/` are autowired services, so inject dependencies through the constructor. Split hooks across several classes
+by concern rather than putting everything in one class.
+
+**Exception:** install-time hooks (`hook_install()`, `hook_uninstall()`, `hook_update_N()`, `hook_schema()`,
+`hook_requirements()`) cannot be OOP hooks — keep them procedural in the `.install` file.
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace Drupal\my_module\Hooks;
+namespace Drupal\my_module\Hook;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\Hook;
 
 /**
- * Implements hook_ENTITY_TYPE_insert() for nodes.
+ * Hook implementations for my_module.
  */
-function my_module_node_insert(EntityInterface $entity): void {
-    // React to node creation
-}
+final class MyHooks {
 
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-function my_module_form_node_form_alter(array &$form, array &$form_state): void {
-    // Modify node form
-}
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for nodes.
+   */
+  #[Hook('node_insert')]
+  public function nodeInsert(EntityInterface $entity): void {
+    // React to node creation.
+  }
 
-/**
- * Implements hook_preprocess_HOOK().
- */
-function my_module_preprocess_node(array &$variables): void {
-    // Prepare variables for node template
+  /**
+   * Implements hook_form_FORM_ID_alter() for node forms.
+   */
+  #[Hook('form_node_form_alter')]
+  public function formNodeFormAlter(array &$form, FormStateInterface $form_state, string $form_id): void {
+    // Modify node form.
+  }
+
+  /**
+   * Implements hook_preprocess_HOOK() for nodes.
+   */
+  #[Hook('preprocess_node')]
+  public function preprocessNode(array &$variables): void {
+    // Prepare variables for node template.
+  }
+
 }
 ```
 
@@ -472,12 +490,31 @@ class MyForm extends FormBase {
 ### Hook Alters for Forms
 
 ```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Form hook implementations for my_module.
  */
-function my_module_form_node_form_alter(array &$form, FormStateInterface $form_state): void {
-    // Modify the node form
-    $form['title']['widget'][0]['value']['#title'] = t('Custom Title Label');
+final class FormHooks {
+
+  use StringTranslationTrait;
+
+  /**
+   * Implements hook_form_FORM_ID_alter() for node forms.
+   */
+  #[Hook('form_node_form_alter')]
+  public function formNodeFormAlter(array &$form, FormStateInterface $form_state, string $form_id): void {
+    $form['title']['widget'][0]['value']['#title'] = $this->t('Custom Title Label');
+  }
+
 }
 ```
 
@@ -624,7 +661,8 @@ class DatabaseService {
 }
 ```
 
-**Database Schema Definition** (`my_module.install`):
+**Database Schema Definition** (`my_module.install` — `hook_schema()` is install-time, so it cannot be an OOP hook and
+stays procedural):
 
 ```php
 <?php
@@ -697,25 +735,44 @@ Keep templates logic-free. Use preprocessing for data preparation.
 
 ### Template Preprocessing
 
-Use `MODULE_preprocess_HOOK()` to prepare variables.
+Use an OOP `#[Hook('preprocess_HOOK')]` method to prepare variables.
 
 ```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+
 /**
- * Implements hook_preprocess_HOOK() for my-template.
+ * Theme hook implementations for my_module.
  */
-function my_module_preprocess_my_template(array &$variables): void {
-    // Load and prepare data
+final class ThemeHooks {
+
+  use StringTranslationTrait;
+
+  /**
+   * Implements hook_preprocess_HOOK() for my-template.
+   */
+  #[Hook('preprocess_my_template')]
+  public function preprocessMyTemplate(array &$variables): void {
+    // Load and prepare data.
     $variables['title'] = 'My Title';
 
     $variables['items'] = [
-        ['name' => 'Item 1'],
-        ['name' => 'Item 2'],
+      ['name' => 'Item 1'],
+      ['name' => 'Item 2'],
     ];
 
-    $variables['empty_message'] = t('No items found');
+    $variables['empty_message'] = $this->t('No items found');
 
-    // Attach libraries
+    // Attach libraries.
     $variables['#attached']['library'][] = 'my_module/my_library';
+  }
+
 }
 ```
 

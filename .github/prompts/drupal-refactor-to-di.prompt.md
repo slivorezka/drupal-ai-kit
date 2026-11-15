@@ -45,7 +45,7 @@ You are a Drupal 10 refactoring expert. Refactor the provided code to use proper
 
 **Refactoring Patterns:**
 
-### Pattern 1: Hook Function to Service Class
+### Pattern 1: Procedural Hook to OOP Hook Class
 **Before:**
 ```php
 function my_module_node_insert(EntityInterface $entity): void {
@@ -66,25 +66,45 @@ function my_module_node_insert(EntityInterface $entity): void {
 
 declare(strict_types=1);
 
-namespace Drupal\my_module\Service;
+namespace Drupal\my_module\Hook;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Hook\Attribute\Hook;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-class NodeInsertService {
+/**
+ * Node hook implementations for my_module.
+ */
+final class NodeHooks {
 
-    public function __construct(
-        private readonly Connection $database,
-        private readonly LoggerInterface $logger,
-    ) {}
+  /**
+   * Constructs a NodeHooks object.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The my_module logger channel.
+   */
+  public function __construct(
+    private readonly Connection $database,
+    #[Autowire(service: 'logger.channel.my_module')]
+    private readonly LoggerInterface $logger,
+  ) {}
 
-    public function onNodeInsert(EntityInterface $entity): void {
-        $this->database->insert('my_table')
-            ->fields(['nid' => $entity->id()])
-            ->execute();
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for nodes.
+   */
+  #[Hook('node_insert')]
+  public function nodeInsert(EntityInterface $entity): void {
+    $this->database->insert('my_table')
+      ->fields(['nid' => $entity->id()])
+      ->execute();
 
-        $this->logger->info('Node created: @nid', ['@nid' => $entity->id()]);
-    }
+    $this->logger->info('Node created: @nid', ['@nid' => $entity->id()]);
+  }
+
 }
 ```
 
@@ -466,19 +486,47 @@ function my_module_node_insert(EntityInterface $entity): void {
 }
 ```
 
-### After: Delegate to Service
+### After: OOP Hook Class with Constructor Injection
+Move the hook to a class in `src/Hook/` with the `#[Hook]` attribute (Drupal 11.1+). Classes in `src/Hook/` are
+registered as autowired services automatically, so they take dependencies through the constructor. Delete the
+procedural function afterward.
+
 ```php
 <?php
 
 declare(strict_types=1);
 
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\my_module\Service\NodeService;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
 /**
- * Implements hook_ENTITY_TYPE_insert().
+ * Node hook implementations for my_module.
  */
-function my_module_node_insert(EntityInterface $entity): void {
-    /** @var \Drupal\my_module\Service\NodeService $nodeService */
-    $nodeService = \Drupal::service('my_module.node_service');
-    $nodeService->onNodeInsert($entity);
+final class NodeHooks {
+
+  /**
+   * Constructs a NodeHooks object.
+   *
+   * @param \Drupal\my_module\Service\NodeService $nodeService
+   *   The node service.
+   */
+  public function __construct(
+    #[Autowire(service: 'my_module.node_service')]
+    private readonly NodeService $nodeService,
+  ) {}
+
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for nodes.
+   */
+  #[Hook('node_insert')]
+  public function nodeInsert(EntityInterface $entity): void {
+    $this->nodeService->onNodeInsert($entity);
+  }
+
 }
 ```
 
@@ -527,7 +575,8 @@ class NodeEventSubscriber implements EventSubscriberInterface {
 7. **Add PHPDoc**: Document all methods and classes
 8. **Register Service**: Add service to `module_name.services.yml`
 9. **Test**: Verify all functionality works after refactoring
-10. **Update Module Hook**: If applicable, update hook implementations
+10. **Convert Hooks**: Move procedural hooks from `.module` to `#[Hook]` classes in `src/Hook/` (install-time hooks in
+    `.install` stay procedural)
 
 ---
 
@@ -620,9 +669,25 @@ function my_module_hook(): void {
     $service = \Drupal::service('my_module.service');
 }
 
-// ✅ Solution: Delegate to service or event subscriber
-function my_module_hook(): void {
-    \Drupal::service('my_module.hook_handler')->handle();
+// ✅ Solution: OOP hook class in src/Hook/ with constructor injection
+namespace Drupal\my_module\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\my_module\Service\MyService;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
+final class MyHooks {
+
+  public function __construct(
+    #[Autowire(service: 'my_module.service')]
+    private readonly MyService $service,
+  ) {}
+
+  #[Hook('hook_name')]
+  public function hookName(): void {
+    $this->service->handle();
+  }
+
 }
 ```
 

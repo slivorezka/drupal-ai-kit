@@ -112,18 +112,38 @@ public function getUser(int $userId): ?User {
 }
 ```
 
-### Function Documentation
-- All standalone functions (hooks, utilities) must have PHPDoc blocks.
+### Hook Documentation (OOP hooks)
+- Hooks are OOP classes in `src/Hook/` with the `#[Hook(...)]` attribute (Drupal 11.1+).
+- Each implementation still carries a standard `Implements hook_...()` docblock.
+- Install-time hooks (`hook_install()`, `hook_uninstall()`, `hook_update_N()`, `hook_schema()`, `hook_requirements()`)
+  cannot be OOP hooks — keep them procedural in the `.install` file.
 
 ```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\mymodule\Hook;
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+
 /**
- * Implements hook_ENTITY_TYPE_insert().
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *   The entity object being inserted.
+ * Hook implementations for mymodule.
  */
-function mymodule_node_insert(EntityInterface $entity): void {
+final class NodeHooks {
+
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for nodes.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity object being inserted.
+   */
+  #[Hook('node_insert')]
+  public function nodeInsert(EntityInterface $entity): void {
     // ...
+  }
+
 }
 ```
 
