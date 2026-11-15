@@ -1035,8 +1035,8 @@ $this->configFactory->getEditable('my_module.settings')
 ```
 
 Config is exported to `config/sync` and committed, so it holds settings only. API keys, passwords and tokens come
-from environment variables through `settings.php` (`$settings['my_module_api_key'] = getenv('MY_MODULE_API_KEY');`,
-read with `Settings::get()`), or from the Key module when the project uses it. Every config object has a schema in
+from environment variables, which `settings.php` copies into `$settings` (read them with `Settings::get()`), or from
+the Key module when the project uses it. Every config object has a schema in
 `config/schema/my_module.schema.yml`.
 
 ---

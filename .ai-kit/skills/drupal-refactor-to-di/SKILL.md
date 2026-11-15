@@ -1,6 +1,6 @@
 ---
 name: drupal-refactor-to-di
-description: Refactor Drupal code from static \Drupal:: calls to dependency injection
+description: "Refactor Drupal code from static \\Drupal:: calls to dependency injection"
 argument-hint: <file or directory>
 ---
 

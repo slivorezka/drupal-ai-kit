@@ -1,7 +1,7 @@
 ---
 name: git-commit
-description: Generate a commit message in the project format (#329: Description.)
-argument-hint: [ context ]
+description: "Generate a commit message in the project format (#329: Description.)"
+argument-hint: "[context]"
 ---
 
 Write a commit message for the current changes. Extra context from the user: $ARGUMENTS
