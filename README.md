@@ -1,5 +1,9 @@
 # Drupal AI Kit
 
+[![Packagist](https://img.shields.io/packagist/v/slivorezka/drupal-ai-kit)](https://packagist.org/packages/slivorezka/drupal-ai-kit)
+[![CI](https://github.com/slivorezka/drupal-ai-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/slivorezka/drupal-ai-kit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/slivorezka/drupal-ai-kit)](LICENSE)
+
 A ready-to-use set of AI coding assistant configurations for Drupal 10/11 projects. It gives **GitHub Copilot**,
 **Codex** and **Claude Code** the same project rules, coding standards, reusable skills and specialised subagents, so
 every assistant on the team writes Drupal code the same way.
