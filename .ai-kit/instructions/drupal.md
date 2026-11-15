@@ -913,7 +913,7 @@ final class DataProcessorTest extends UnitTestCase {
    * Tests processData method.
    */
   public function testProcessDataSuccess(): void {
-    $input = ['key' => 'value'];
+    $input = ['title' => 'Example'];
     $result = $this->dataProcessor->processData($input);
     $this->assertIsArray($result);
   }
@@ -966,8 +966,8 @@ final class CacheService {
   /**
    * Stores data with cache tags.
    */
-  public function store(string $key, array $data): void {
-    $this->cache->set($key, $data, CacheBackendInterface::CACHE_PERMANENT, ['my_module_tag']);
+  public function store(string $cid, array $data): void {
+    $this->cache->set($cid, $data, CacheBackendInterface::CACHE_PERMANENT, ['my_module_tag']);
   }
 
   /**
