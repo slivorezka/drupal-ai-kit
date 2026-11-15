@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shellcheck
+        run: shellcheck .ai-kit/install.sh bin/drupal-ai-kit
+
+      - name: Composer validate
+        run: composer validate --strict
+
+      - name: Plugin manifest
+        run: |
+          jq . .claude-plugin/plugin.json .claude-plugin/marketplace.json > /dev/null
+          for f in .ai-kit/agents/*.md; do
+            grep -q "\"./$f\"" .claude-plugin/plugin.json || { echo "Missing in plugin.json: $f"; exit 1; }
+          done
+
+      - name: Skill names match their folders
+        run: |
+          for d in .ai-kit/skills/*/; do
+            n="$(basename "$d")"
+            grep -qx "name: $n" "$d/SKILL.md" || { echo "Name mismatch in $d/SKILL.md"; exit 1; }
+          done
+
+      - name: Plugin version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          test "$(jq -r .version .claude-plugin/plugin.json)" = "${GITHUB_REF_NAME#v}"
+
+      - name: Smoke test (Composer install path)
+        run: |
+          p="$(mktemp -d)"
+          echo '{}' > "$p/composer.json"
+          mkdir -p "$p/vendor/slivorezka" "$p/vendor/bin"
+          cp -r . "$p/vendor/slivorezka/drupal-ai-kit"
+          ln -s ../slivorezka/drupal-ai-kit/bin/drupal-ai-kit "$p/vendor/bin/drupal-ai-kit"
+          cd "$p"
+          vendor/bin/drupal-ai-kit init claude codex copilot
+          test -f AGENTS.md
+          test -d .claude/agents
+          test -f .codex/config.toml
+          test -d .agents/skills/git-commit
+          test -f .github/copilot-instructions.md
+          grep -qx '.ai-kit/.installed/' .gitignore
+          echo '# project rule' >> AGENTS.md
+          vendor/bin/drupal-ai-kit update
+          grep -q '# project rule' AGENTS.md
+          .ai-kit/install.sh --remove claude codex copilot
+          test ! -e .claude/agents

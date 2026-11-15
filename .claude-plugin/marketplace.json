@@ -1,0 +1,13 @@
+{
+  "name": "drupal-ai-kit",
+  "owner": {
+    "name": "Andrii Malieiev"
+  },
+  "plugins": [
+    {
+      "name": "drupal-ai-kit",
+      "source": "./",
+      "description": "Drupal 10/11 skills and role-based subagents: backend, theme, e2e, ops, SEO, code review."
+    }
+  ]
+}

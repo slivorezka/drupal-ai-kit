@@ -22,6 +22,29 @@ tool.
 - **Specialised subagents** — back end, theme/front end, e2e testing, ops/deploy, SEO/analytics and code review.
 - **Safe defaults** — `.env` files are off-limits; no commits, pushes or production changes without explicit request.
 
+## Install
+
+**Composer** (recommended) — from the Drupal project root:
+
+```bash
+composer require --dev slivorezka/drupal-ai-kit
+vendor/bin/drupal-ai-kit init claude      # or codex, copilot; several names at once work too
+```
+
+`init` copies `AGENTS.md` (only if the project has none) and `.ai-kit/` into the project, adds the generated folders
+to `.gitignore` and installs the named tools. Commit `AGENTS.md`, `.ai-kit/` and `.gitignore`. After
+`composer update`, run `vendor/bin/drupal-ai-kit update`: it refreshes `.ai-kit/` and the installed tools and never
+touches `AGENTS.md`, so keep project rules there, not in `.ai-kit/`.
+
+**Claude Code plugin** — only the skills and subagents, without `AGENTS.md` and the topic guides:
+
+```
+/plugin marketplace add slivorezka/drupal-ai-kit
+/plugin install drupal-ai-kit@drupal-ai-kit
+```
+
+**Manually** — copy the files as described in [Getting Started](#getting-started).
+
 ## What's Included
 
 ### Topic Guides
@@ -69,6 +92,10 @@ AGENTS.md            # Shared project rules, read in place by every tool
 │   ├── codex/       #   -> .codex/    config.toml
 │   └── copilot/     #   -> .github/   pointers to AGENTS.md, the guides and the skills
 └── install.sh       # Generates the settings of a tool from everything above
+bin/drupal-ai-kit    # Composer entry point: copies the kit into a project, runs install.sh
+.claude-plugin/      # Claude Code plugin and marketplace manifests
+composer.json        # Composer package slivorezka/drupal-ai-kit
+CHANGELOG.md
 ```
 
 `.claude/`, `.codex/`, `.agents/skills/` and the Copilot files in `.github/` are not in the repository.
@@ -93,7 +120,7 @@ pattern and point at the guide for that file type; `.github/prompts/` exposes th
 
 Once per project:
 
-1. Copy `AGENTS.md` and `.ai-kit/` into your Drupal project root.
+1. Copy `AGENTS.md` and `.ai-kit/` into your Drupal project root (`vendor/bin/drupal-ai-kit init` does steps 1–2).
 2. Add the kit's entries to the project's `.gitignore`:
 
    ```

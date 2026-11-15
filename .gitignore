@@ -1,7 +1,18 @@
 # AI tool settings: every developer generates them with `.ai-kit/install.sh <tool>`
 # from the sources in `.ai-kit/`.
 .ai-kit/.installed/
+.claude/
+.codex/
+.agents/skills/
+.github/copilot-instructions.md
+.github/git-commit-instructions.md
+.github/instructions/
+.github/prompts/
 
 # OS and IDE files.
 .DS_Store
 .idea/
+
+# Composer (the kit is a library: no lock file).
+vendor/
+composer.lock

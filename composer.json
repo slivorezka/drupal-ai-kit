@@ -1,0 +1,17 @@
+{
+  "name": "slivorezka/drupal-ai-kit",
+  "description": "Role-based subagents, skills and coding rules for AI assistants on Drupal 10/11 — one source for Claude Code, Codex and GitHub Copilot.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": ["drupal", "ai", "agents", "agents-md", "claude-code", "codex", "copilot", "skills", "subagents"],
+  "homepage": "https://github.com/slivorezka/drupal-ai-kit",
+  "authors": [{
+    "name": "Andrii Malieiev",
+    "homepage": "https://github.com/slivorezka"
+  }],
+  "support": {
+    "issues": "https://github.com/slivorezka/drupal-ai-kit/issues",
+    "source": "https://github.com/slivorezka/drupal-ai-kit"
+  },
+  "bin": ["bin/drupal-ai-kit"]
+}
