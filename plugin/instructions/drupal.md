@@ -1034,9 +1034,8 @@ $this->configFactory->getEditable('my_module.settings')
   ->save();
 ```
 
-Config is exported to `config/sync` and committed, so it holds settings only. Secret values never go into config:
-`settings.php` provides them per environment (read them with `Settings::get()`), or the Key module does when the
-project uses it. Every config object has a schema in
+Config is exported to `config/sync` and committed, so it holds settings only. Site-specific values that must not be
+committed belong in `settings.php` (read them with `Settings::get()`) or in the Key module when the project uses it. Every config object has a schema in
 `config/schema/my_module.schema.yml`.
 
 ---
