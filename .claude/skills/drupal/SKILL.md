@@ -1,6 +1,6 @@
 ---
 name: drupal
-description: Generates a composable AGENTS.md file for Drupal projects by detecting the development environment (DDEV, Lando, Docker Compose, or vanilla) and Drupal version, then assembling modular content sections accordingly.
+description: Generates a composable AGENTS.md file for Drupal projects by detecting the development environment (DDEV, Docker Compose, or vanilla) and Drupal version, then assembling modular content sections accordingly.
 disable-model-invocation: true
 ---
 
@@ -27,7 +27,7 @@ All paths below are relative to this skill's directory (`.agents/skills/drupal/`
    The script prints JSON with the detected environment, Drupal version, and PHP requirement.
 
 2. **Check Supported Environment**: Only DDEV reference content is bundled (`references/environments/ddev/`).
-   If the script reports `lando`, `docker-compose` or `vanilla`, stop and tell the user that environment-specific sections are missing rather than inventing them.
+   If the script reports `docker-compose` or `vanilla`, stop and tell the user that environment-specific sections are missing rather than inventing them.
 
 3. **Check Existing Files**: Look for existing agent instructions (`AGENTS.md`, `.agents/AGENTS.md`, `CLAUDE.md`).
    If one exists, ask the user whether to create a new root `AGENTS.md`, update the existing file, or only show the result.
@@ -45,7 +45,7 @@ All paths below are relative to this skill's directory (`.agents/skills/drupal/`
 
 The script detects:
 
-- Development environment (`ddev`, `lando`, `docker-compose`, or `vanilla`)
+- Development environment (`ddev`, `docker-compose`, or `vanilla`)
 - Drupal version from `composer.json` (`drupal/core` or `drupal/core-recommended`)
 - PHP version requirement from `composer.json` (and `.ddev/config.yaml` for DDEV)
 

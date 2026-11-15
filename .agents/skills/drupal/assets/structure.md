@@ -29,7 +29,7 @@ This guide defines the ordering and composition of sections in the final AGENTS.
 
 In `references/sections/project-overview.md`, replace:
 - `{DRUPAL_VERSION}` with detected Drupal version (e.g., "10.x+" or "11.x+")
-- `{ENVIRONMENT_NAME}` with detected environment (DDEV, Lando, Docker Compose, or Vanilla)
+- `{ENVIRONMENT_NAME}` with detected environment (DDEV, Docker Compose, or Vanilla)
 - `{DDEV_PROJECT_TYPE}` with `drupal10` or `drupal11` (from the detected Drupal major version)
 - `{PHP_VERSION}` with detected PHP version requirement
 - `{WEBSERVER}` with appropriate webserver (Nginx, Apache, or both)
@@ -61,7 +61,7 @@ For Drupal 10.x:
 
 ## Environment-Specific Content
 
-Each environment directory (`ddev/`, `lando/`, `docker-compose/`, `vanilla/`) contains the files below. Only `ddev/` is
+Each environment directory (`ddev/`, `docker-compose/`, `vanilla/`) contains the files below. Only `ddev/` is
 bundled today:
 - `overview.md` - Environment-specific overview (used in Project Overview section)
 - `setup.md` - Setup instructions

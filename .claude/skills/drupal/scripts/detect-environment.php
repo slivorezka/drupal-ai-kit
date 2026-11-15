@@ -5,7 +5,7 @@
  * Environment Detection Script for Drupal AGENTS.md Generator
  *
  * Detects:
- * - Development environment (DDEV, Lando, Docker Compose, or Vanilla)
+ * - Development environment (DDEV, Docker Compose, or Vanilla)
  * - Drupal version from composer.json
  * - PHP version requirements
  *
@@ -63,18 +63,6 @@ if (is_dir($projectRoot . '/.ddev') || file_exists($projectRoot . '/.ddev/config
     if (file_exists($ddevConfig)) {
         $configContent = file_get_contents($ddevConfig);
         if (preg_match('/php_version:\s*["\']?([0-9.]+)["\']?/', $configContent, $matches)) {
-            $detected['php_version'] = $matches[1];
-        }
-    }
-} elseif (file_exists($projectRoot . '/.lando.yml')) {
-    $detected['environment'] = 'lando';
-    $detected['detection_method'][] = 'Found .lando.yml';
-
-    // Try to read PHP version from Lando config
-    $landoConfig = $projectRoot . '/.lando.yml';
-    if (file_exists($landoConfig)) {
-        $configContent = file_get_contents($landoConfig);
-        if (preg_match('/php:\s*["\']?([0-9.]+)["\']?/', $configContent, $matches)) {
             $detected['php_version'] = $matches[1];
         }
     }
