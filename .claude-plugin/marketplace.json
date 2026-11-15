@@ -1,5 +1,6 @@
 {
   "name": "drupal-ai-kit",
+  "description": "Drupal 10/11 skills and role-based subagents for Claude Code, from the Drupal AI Kit.",
   "owner": {
     "name": "Andrii Malieiev"
   },
